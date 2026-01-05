@@ -37,21 +37,80 @@ let () =
          | Continue new_state ->
              current_state := new_state;
              let curr_player = Game_logic.get_current_player new_state in
+             let space = new_state.board.(curr_player.position) in
+
+             (* Determine space name *)
+             let space_name = match space.space_type with
+               | Game_types.Start -> "START"
+               | Game_types.Property p -> p.name
+               | Game_types.Broadcasting b -> b.name
+               | Game_types.Utility u -> u.name
+               | Game_types.Tax t -> t.name
+               | Game_types.TransferMarket -> "Transfer Market"
+               | Game_types.MatchDay -> "Match Day"
+               | Game_types.Corner s -> s
+             in
+
+             (* Determine event type and details *)
+             let (event_type, can_buy, rent_info, tax_info) = match space.space_type with
+               | Game_types.TransferMarket ->
+                   (Js.some (Js.string "transferMarket"), Js._false, Js.null, Js.null)
+               | Game_types.MatchDay ->
+                   (Js.some (Js.string "matchDay"), Js._false, Js.null, Js.null)
+               | Game_types.Tax t ->
+                   (Js.null, Js._false, Js.null, Js.some (Js.Unsafe.obj [|("amount", Js.Unsafe.inject t.amount)|]))
+               | Game_types.Property _ when space.property_state.owner = None ->
+                   (Js.null, Js._true, Js.null, Js.null)
+               | Game_types.Property _ when space.property_state.owner = Some curr_player.id ->
+                   (Js.null, Js._false, Js.null, Js.null)
+               | Game_types.Property _ ->
+                   (match space.property_state.owner with
+                    | Some owner_id ->
+                        let rent = Game_logic.calculate_rent new_state space owner_id in
+                        let owner = List.find (fun player -> player.Game_types.id = owner_id) new_state.players in
+                        let rent_obj = Js.Unsafe.obj [|
+                          ("amount", Js.Unsafe.inject rent);
+                          ("ownerName", Js.Unsafe.inject (Js.string owner.Game_types.name))
+                        |] in
+                        (Js.null, Js._false, Js.some rent_obj, Js.null)
+                    | None -> (Js.null, Js._false, Js.null, Js.null))
+               | Game_types.Broadcasting _ | Game_types.Utility _ when space.property_state.owner = None ->
+                   (Js.null, Js._true, Js.null, Js.null)
+               | Game_types.Broadcasting _ | Game_types.Utility _ ->
+                   (Js.null, Js._false, Js.null, Js.null)
+               | _ -> (Js.null, Js._false, Js.null, Js.null)
+             in
+
              object%js
                val success = Js._true
                val position = curr_player.position
+               val spaceName = Js.string space_name
+               val event = event_type
+               val canBuy = can_buy
+               val rentPaid = rent_info
+               val taxPaid = tax_info
                val winner = Js.null
              end
          | Error _msg ->
              object%js
                val success = Js._false
                val position = 0
+               val spaceName = Js.string ""
+               val event = Js.null
+               val canBuy = Js._false
+               val rentPaid = Js.null
+               val taxPaid = Js.null
                val winner = Js.null
              end
          | Winner player ->
              object%js
                val success = Js._true
                val position = 0
+               val spaceName = Js.string ""
+               val event = Js.null
+               val canBuy = Js._false
+               val rentPaid = Js.null
+               val taxPaid = Js.null
                val winner = Js.some (Js.string player.name)
              end
 
@@ -59,22 +118,37 @@ let () =
          match Game_logic.apply_action !current_state BuyProperty with
          | Continue new_state ->
              current_state := new_state;
-             Js._true
-         | _ -> Js._false
+             object%js
+               val success = Js._true
+             end
+         | _ ->
+             object%js
+               val success = Js._false
+             end
 
        method buyYouth =
          match Game_logic.apply_action !current_state BuyYouth with
          | Continue new_state ->
              current_state := new_state;
-             Js._true
-         | _ -> Js._false
+             object%js
+               val success = Js._true
+             end
+         | _ ->
+             object%js
+               val success = Js._false
+             end
 
        method buyStar =
          match Game_logic.apply_action !current_state BuyStar with
          | Continue new_state ->
              current_state := new_state;
-             Js._true
-         | _ -> Js._false
+             object%js
+               val success = Js._true
+             end
+         | _ ->
+             object%js
+               val success = Js._false
+             end
 
        method endTurn =
          match Game_logic.apply_action !current_state EndTurn with
@@ -108,22 +182,36 @@ let () =
            val properties = Js.array (Array.of_list player.properties)
          end
 
+       method getPlayers =
+         Js.array (Array.of_list (List.map (fun (player : Game_types.player) ->
+           object%js
+             val id = player.id
+             val name = Js.string player.name
+             val money = player.money
+             val position = player.position
+             val properties = Js.array (Array.of_list player.properties)
+             val bankrupt = Js.bool player.bankrupt
+           end
+         ) !current_state.players))
+
        method getBoard =
          let spaces = Array.to_list !current_state.board in
          Js.array (Array.of_list (List.map (fun (space : Game_types.space) ->
-           let space_name = match space.space_type with
-             | Game_types.Property p -> p.name
-             | Game_types.Broadcasting b -> b.name
-             | Game_types.Utility u -> u.name
-             | Game_types.Tax t -> t.name
-             | Game_types.TransferMarket -> "Transfer Market"
-             | Game_types.MatchDay -> "Match Day"
-             | Game_types.Corner s -> s
-             | Game_types.Start -> "START"
+           let (space_name, price, space_type_str) = match space.space_type with
+             | Game_types.Property p -> (p.name, p.price, "Property")
+             | Game_types.Broadcasting b -> (b.name, b.price, "Broadcasting")
+             | Game_types.Utility u -> (u.name, u.price, "Utility")
+             | Game_types.Tax t -> (t.name, 0, "Tax")
+             | Game_types.TransferMarket -> ("Transfer Market", 0, "TransferMarket")
+             | Game_types.MatchDay -> ("Match Day", 0, "MatchDay")
+             | Game_types.Corner s -> (s, 0, "Corner")
+             | Game_types.Start -> ("START", 0, "Start")
            in
            object%js
              val position = space.position
              val name = Js.string space_name
+             val spaceType = Js.string space_type_str
+             val price = price
              val owner = Js.Opt.option (space.property_state.owner)
              val youthPlayers = space.property_state.youth_players
              val hasStar = Js.bool space.property_state.has_star

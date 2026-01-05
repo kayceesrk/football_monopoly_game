@@ -11,6 +11,7 @@
 
 (package
  (name football_monopoly)
+ (allow_empty)
  (synopsis "Functional football monopoly game in OCaml")
  (description "A browser-based monopoly game with football clubs, compiled to JavaScript via js_of_ocaml")
  (depends

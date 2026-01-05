@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test OCaml Game</title></head>
+<body>
+    <h1>Testing OCaml Game Engine</h1>
+    <div id="output"></div>
+    <script src="main.bc.js"></script>
+    <script>
+        const output = document.getElementById('output');
+        function log(msg) {
+            output.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+        
+        // Test 1: Check if OCaml module loaded
+        log('Test 1: Checking FootballMonopolyOCaml...');
+        if (window.FootballMonopolyOCaml) {
+            log('✓ FootballMonopolyOCaml is loaded');
+            const game = window.FootballMonopolyOCaml;
+            
+            // Test 2: Start game
+            log('Test 2: Starting game...');
+            try {
+                const result = game.startGame(2, ['Player 1', 'Player 2']);
+                log('Start game result: ' + result);
+                
+                // Test 3: Get current player
+                log('Test 3: Get current player...');
+                const player = game.getCurrentPlayer();
+                log('Current player: ' + JSON.stringify({
+                    id: player.id,
+                    name: player.name,
+                    money: player.money,
+                    position: player.position
+                }));
+                
+                // Test 4: Roll dice
+                log('Test 4: Rolling dice...');
+                const rollResult = game.rollDice();
+                log('Roll result: ' + JSON.stringify({
+                    success: rollResult.success,
+                    position: rollResult.position
+                }));
+                
+                // Test 5: Get board
+                log('Test 5: Get board...');
+                const board = game.getBoard();
+                log('Board has ' + board.length + ' spaces');
+                log('First space: ' + board[0].name);
+                
+            } catch (e) {
+                log('✗ Error: ' + e.message);
+                log('Stack: ' + e.stack);
+            }
+        } else {
+            log('✗ FootballMonopolyOCaml NOT loaded!');
+        }
+    </script>
+</body>
+</html>

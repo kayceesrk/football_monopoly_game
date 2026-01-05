@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Popups</title>
+</head>
+<body>
+    <h1>Test Popup Dialogs</h1>
+    <button id="testPrompt">Test Prompt</button>
+    <button id="testAlert">Test Alert</button>
+    <button id="testOCaml">Test OCaml Module</button>
+    <div id="output"></div>
+
+    <script src="main.bc.js"></script>
+    <script>
+        document.getElementById('testPrompt').addEventListener('click', () => {
+            const result = prompt("Enter something:", "default");
+            document.getElementById('output').innerHTML = 'Prompt result: ' + result;
+        });
+
+        document.getElementById('testAlert').addEventListener('click', () => {
+            alert('This is an alert!');
+        });
+
+        document.getElementById('testOCaml').addEventListener('click', () => {
+            console.log('OCaml module:', window.FootballMonopolyOCaml);
+            if (window.FootballMonopolyOCaml) {
+                document.getElementById('output').innerHTML = 'OCaml module is loaded!';
+
+                // Try starting a game
+                const success = window.FootballMonopolyOCaml.startGame(2, ['Player 1', 'Player 2']);
+                console.log('startGame result:', success);
+                document.getElementById('output').innerHTML += '<br>startGame returned: ' + success;
+            } else {
+                document.getElementById('output').innerHTML = 'OCaml module NOT loaded!';
+            }
+        });
+    </script>
+</body>
+</html>

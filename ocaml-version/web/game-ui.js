@@ -1,13 +1,19 @@
 // UI Controller for OCaml Football Monopoly
 class GameUI {
     constructor() {
-        this.game = window.FootballMonopolyOCaml;
+        this.game = null;
         this.gameStarted = false;
         this.numPlayers = 2;
         this.playerNames = ['Manager 1', 'Manager 2'];
     }
 
     init() {
+        // Wait for OCaml to load
+        if (!window.FootballMonopolyOCaml) {
+            console.error('FootballMonopolyOCaml not loaded!');
+            return;
+        }
+        this.game = window.FootballMonopolyOCaml;
         this.setupEventListeners();
         this.updateUI();
     }
@@ -30,7 +36,39 @@ class GameUI {
     }
 
     startGame() {
+        console.log('startGame() called');
+        if (!this.game) {
+            console.error('Game engine not loaded!');
+            alert('Game engine not loaded!');
+            return;
+        }
+
+        console.log('About to show prompt for number of players...');
+        // Ask for number of players
+        const numPlayersStr = prompt("How many managers? (2-4)", "2");
+        console.log('User entered numPlayers:', numPlayersStr);
+        const numPlayers = parseInt(numPlayersStr);
+
+        if (!numPlayers || numPlayers < 2 || numPlayers > 4) {
+            alert("Please enter a number between 2 and 4");
+            return;
+        }
+
+        // Ask for player names
+        const playerNames = [];
+        for (let i = 1; i <= numPlayers; i++) {
+            console.log(`Asking for player ${i} name...`);
+            const name = prompt(`Manager ${i} name:`, `Manager ${i}`);
+            console.log(`Player ${i} name:`, name);
+            playerNames.push(name || `Manager ${i}`);
+        }
+
+        console.log('Starting game with:', numPlayers, 'players:', playerNames);
+        this.numPlayers = numPlayers;
+        this.playerNames = playerNames;
+
         const success = this.game.startGame(this.numPlayers, this.playerNames);
+        console.log('startGame result:', success);
         if (success) {
             this.gameStarted = true;
             document.getElementById('rollDiceBtn').disabled = false;
@@ -43,19 +81,46 @@ class GameUI {
     rollDice() {
         if (!this.gameStarted) return;
 
-        const result = this.game.rollDice();
+        // Generate dice rolls
+        const die1 = Math.floor(Math.random() * 6) + 1;
+        const die2 = Math.floor(Math.random() * 6) + 1;
+
+        // Pass dice values to OCaml
+        const result = this.game.rollDice(die1, die2);
+        console.log('rollDice result:', result);
         if (result.success) {
             // Disable roll button until turn ends
             document.getElementById('rollDiceBtn').disabled = true;
             document.getElementById('endTurnBtn').disabled = false;
 
-            // Show dice animation
-            const die1 = Math.floor(Math.random() * 6) + 1;
-            const die2 = Math.floor(Math.random() * 6) + 1;
+            // Show dice
             document.getElementById('die1').textContent = die1;
             document.getElementById('die2').textContent = die2;
 
-            this.showMessage(`Rolled ${die1} + ${die2} = ${die1 + die2}`, 'info');
+            let message = `Rolled ${die1} + ${die2} = ${die1 + die2}. Landed on ${result.spaceName}`;
+
+            // Add details based on what happened
+            if (result.canBuy) {
+                message += ' - Available to buy!';
+                document.getElementById('buyPropertyBtn').disabled = false;
+            } else if (result.rentPaid) {
+                message += ` - Paid ${result.rentPaid.amount} FC rent to ${result.rentPaid.ownerName}`;
+            } else if (result.taxPaid) {
+                message += ` - Paid ${result.taxPaid.amount} FC tax`;
+            }
+
+            this.showMessage(message, 'info');
+
+            // Handle special events
+            if (result.event) {
+                setTimeout(() => {
+                    if (result.event === 'transferMarket') {
+                        alert('⚡ Transfer Market!\n\nYou drew a card. Check your money to see the effect!');
+                    } else if (result.event === 'matchDay') {
+                        alert('🎲 Match Day!\n\nYou drew a card. Check your money to see the effect!');
+                    }
+                }, 600);
+            }
 
             // Highlight landing space
             setTimeout(() => {
@@ -128,7 +193,7 @@ class GameUI {
     }
 
     updateUI() {
-        if (!this.gameStarted) return;
+        if (!this.gameStarted || !this.game) return;
 
         // Update current player
         const player = this.game.getCurrentPlayer();
@@ -145,6 +210,9 @@ class GameUI {
 
         // Update action buttons
         this.updateActionButtons();
+
+        // Update property details to show current position
+        this.showPropertyDetails(player.position);
     }
 
     updatePlayersList() {
@@ -231,14 +299,27 @@ class GameUI {
                                currentSpace.name !== 'START' &&
                                !currentSpace.name.includes('Transfer') &&
                                !currentSpace.name.includes('Match Day') &&
-                               !currentSpace.name.includes('WINDOW');
+                               !currentSpace.name.includes('WINDOW') &&
+                               !currentSpace.name.includes('RELEGATION') &&
+                               !currentSpace.name.includes('BREAK');
 
         document.getElementById('buyPropertyBtn').disabled = !canBuyProperty;
 
-        // Enable buy youth/star if on owned property
-        const canDevelop = currentSpace && currentSpace.owner === player.id;
-        document.getElementById('buyYouthBtn').disabled = !canDevelop || currentSpace.youthPlayers >= 4;
-        document.getElementById('buyStarBtn').disabled = !canDevelop || currentSpace.hasStar || currentSpace.youthPlayers < 4;
+        // Enable buy youth/star only on owned Property (not Broadcasting or Utility)
+        const canDevelop = currentSpace &&
+                          currentSpace.owner === player.id &&
+                          currentSpace.spaceType === 'Property';
+
+        // Check if player has enough money for youth (150% of base price)
+        const youthCost = currentSpace && currentSpace.price ? Math.floor(currentSpace.price * 1.5) : 0;
+        const canAffordYouth = player.money >= youthCost;
+
+        // Check if player has enough money for star (200% of base price)
+        const starCost = currentSpace && currentSpace.price ? currentSpace.price * 2 : 0;
+        const canAffordStar = player.money >= starCost;
+
+        document.getElementById('buyYouthBtn').disabled = !canDevelop || currentSpace.youthPlayers >= 4 || !canAffordYouth;
+        document.getElementById('buyStarBtn').disabled = !canDevelop || currentSpace.hasStar || currentSpace.youthPlayers < 4 || !canAffordStar;
     }
 
     highlightSpace(position) {
@@ -263,8 +344,9 @@ class GameUI {
             html += `<p><strong>Owner:</strong> ${owner.name}</p>`;
             html += `<p><strong>Youth Players:</strong> ${'⚽'.repeat(space.youthPlayers)}</p>`;
             if (space.hasStar) html += `<p><strong>Star Player:</strong> ⭐</p>`;
-        } else if (space.name !== 'START') {
+        } else if (space.price && space.price > 0) {
             html += `<p>Available for purchase</p>`;
+            html += `<p><strong>Price:</strong> ${space.price} FC</p>`;
         }
 
         details.innerHTML = html;
@@ -293,7 +375,17 @@ class GameUI {
 
 // Initialize when page loads
 window.addEventListener('load', () => {
-    const ui = new GameUI();
-    ui.init();
-    console.log('✓ OCaml Football Monopoly UI loaded!');
+    // Wait for OCaml module to be available
+    const initUI = () => {
+        if (window.FootballMonopolyOCaml) {
+            console.log('OCaml module found, initializing UI...');
+            const ui = new GameUI();
+            ui.init();
+            console.log('✓ OCaml Football Monopoly UI loaded!');
+        } else {
+            console.log('Waiting for OCaml module...');
+            setTimeout(initUI, 100);
+        }
+    };
+    initUI();
 });

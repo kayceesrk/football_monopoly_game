@@ -121,19 +121,19 @@ header h1 {
 }
 
 @keyframes landingPulse {
-    0%, 100% { 
+    0%, 100% {
         background: #fff;
         box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.7);
     }
-    25% { 
+    25% {
         background: #c8e6c9;
         box-shadow: 0 0 0 10px rgba(0, 200, 83, 0);
     }
-    50% { 
+    50% {
         background: #a5d6a7;
         box-shadow: 0 0 0 10px rgba(0, 200, 83, 0);
     }
-    75% { 
+    75% {
         background: #c8e6c9;
         box-shadow: 0 0 0 10px rgba(0, 200, 83, 0);
     }
@@ -352,7 +352,7 @@ header h1 {
     border-radius: 50%;
     border: 2px solid white;
     position: absolute;
-    bottom: 5px;
+    top: 25px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     z-index: 5;
     transition: all 0.4s ease-out;
@@ -370,8 +370,8 @@ header h1 {
 
 .player-token-1 { background: #ff5722; left: 5px; }
 .player-token-2 { background: #2196f3; left: 28px; }
-.player-token-3 { background: #4caf50; left: 5px; bottom: 28px; }
-.player-token-4 { background: #9c27b0; left: 28px; bottom: 28px; }
+.player-token-3 { background: #4caf50; left: 52px; }
+.player-token-4 { background: #9c27b0; left: 75px; }
 
 /* Sidebar */
 .sidebar {
@@ -598,11 +598,11 @@ header h1 {
 }
 
 @keyframes starPulse {
-    0%, 100% { 
+    0%, 100% {
         transform: scale(1);
         box-shadow: 0 2px 8px rgba(255, 215, 0, 0.6);
     }
-    50% { 
+    50% {
         transform: scale(1.15);
         box-shadow: 0 2px 12px rgba(255, 215, 0, 0.9);
     }

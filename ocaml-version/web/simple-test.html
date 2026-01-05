@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head><title>Simple Test</title></head>
+<body>
+    <button id="test">Click to Test</button>
+    <pre id="log"></pre>
+    <script src="main.bc.js"></script>
+    <script>
+        const log = document.getElementById('log');
+        function addLog(msg) {
+            log.textContent += msg + '\n';
+            console.log(msg);
+        }
+        
+        document.getElementById('test').onclick = function() {
+            addLog('=== Testing OCaml Game ===');
+            addLog('1. Checking if FootballMonopolyOCaml exists: ' + (!!window.FootballMonopolyOCaml));
+            
+            if (window.FootballMonopolyOCaml) {
+                const game = window.FootballMonopolyOCaml;
+                addLog('2. Calling startGame(2, ["P1", "P2"])...');
+                
+                try {
+                    const result = game.startGame(2, ["P1", "P2"]);
+                    addLog('   Result type: ' + typeof result);
+                    addLog('   Result value: ' + result);
+                    addLog('   Result === true: ' + (result === true));
+                    
+                    addLog('3. Calling getCurrentPlayer()...');
+                    const player = game.getCurrentPlayer();
+                    addLog('   Player name: ' + player.name);
+                    addLog('   Player money: ' + player.money);
+                    
+                } catch (e) {
+                    addLog('ERROR: ' + e.message);
+                    addLog('Stack: ' + e.stack);
+                }
+            } else {
+                addLog('ERROR: FootballMonopolyOCaml not found!');
+            }
+        };
+    </script>
+</body>
+</html>
