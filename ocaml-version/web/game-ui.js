@@ -309,12 +309,8 @@ class GameUI {
         // Enable buy property if on unowned property
         const canBuyProperty = currentSpace &&
                                currentSpace.owner === null &&
-                               currentSpace.name !== 'START' &&
-                               !currentSpace.name.includes('Transfer') &&
-                               !currentSpace.name.includes('Match Day') &&
-                               !currentSpace.name.includes('WINDOW') &&
-                               !currentSpace.name.includes('RELEGATION') &&
-                               !currentSpace.name.includes('BREAK');
+                               currentSpace.spaceType === 'Property' &&
+                               player.money >= currentSpace.price;
 
         document.getElementById('buyPropertyBtn').disabled = !canBuyProperty;
 
