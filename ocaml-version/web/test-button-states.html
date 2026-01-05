@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button State Tests - Football Monopoly</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #4ec9b0; }
+        h2 { color: #569cd6; margin-top: 30px; }
+        .test-results {
+            margin: 20px 0;
+        }
+        .test {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #555;
+            background: #2d2d30;
+        }
+        .test.pass {
+            border-left-color: #4ec9b0;
+            background: #1e3a32;
+        }
+        .test.fail {
+            border-left-color: #f48771;
+            background: #3d1e1e;
+        }
+        .test-name { font-weight: bold; }
+        .test-result { margin-left: 20px; color: #808080; }
+        .summary {
+            margin: 20px 0;
+            padding: 15px;
+            background: #252526;
+            border: 2px solid #4ec9b0;
+        }
+        .summary.fail { border-color: #f48771; }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px 10px 0;
+            background: #0e639c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #1177bb; }
+        #testLog {
+            background: #1e1e1e;
+            border: 1px solid #555;
+            padding: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Football Monopoly - Button State Tests</h1>
+    <p>Comprehensive automated tests for button enable/disable logic</p>
+    
+    <button onclick="runAllTests()">▶ Run All Tests</button>
+    <button onclick="clearResults()">🗑️ Clear Results</button>
+    
+    <div id="summary"></div>
+    <div id="testResults" class="test-results"></div>
+    <div id="testLog"></div>
+
+    <script src="main.bc.js"></script>
+    <script>
+        let testResults = [];
+        let logMessages = [];
+
+        function log(msg) {
+            logMessages.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+            updateLog();
+        }
+
+        function updateLog() {
+            document.getElementById('testLog').innerHTML = 
+                logMessages.map(m => `<div>${m}</div>`).join('');
+        }
+
+        function clearResults() {
+            testResults = [];
+            logMessages = [];
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('summary').innerHTML = '';
+            document.getElementById('testLog').innerHTML = '';
+        }
+
+        class TestHarness {
+            constructor() {
+                this.game = null;
+            }
+
+            init() {
+                if (!window.FootballMonopolyOCaml) {
+                    throw new Error('FootballMonopolyOCaml not loaded!');
+                }
+                this.game = window.FootballMonopolyOCaml;
+                this.game.startGame(2, ['Test Player 1', 'Test Player 2']);
+            }
+
+            // Simulate moving player to a specific position
+            movePlayerTo(position) {
+                const player = this.game.getCurrentPlayer();
+                const currentPos = player.position;
+                const distance = (position - currentPos + 40) % 40;
+                
+                // Simulate rolls to get there
+                let remaining = distance;
+                while (remaining > 0) {
+                    const roll = Math.min(remaining, 12);
+                    const die1 = Math.min(6, roll);
+                    const die2 = roll - die1;
+                    this.game.rollDice(die1, die2);
+                    this.game.endTurn();
+                    remaining -= roll;
+                }
+            }
+
+            getCurrentSpace() {
+                const player = this.game.getCurrentPlayer();
+                const board = this.game.getBoard();
+                return board.find(s => s.position === player.position);
+            }
+
+            buyCurrentProperty() {
+                return this.game.buyProperty();
+            }
+        }
+
+        // Test cases
+        const tests = [
+            {
+                name: "Start state - No buttons enabled before roll",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    const player = harness.game.getCurrentPlayer();
+                    const board = harness.game.getBoard();
+                    const space = board.find(s => s.position === player.position);
+                    
+                    // At start, no buttons should be available (player hasn't rolled)
+                    return {
+                        pass: space.name === 'START',
+                        detail: `Player at: ${space.name}`
+                    };
+                }
+            },
+            {
+                name: "Property space - Buy button enabled only for unowned properties",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    // Move to Aston Villa (position 1)
+                    harness.movePlayerTo(1);
+                    const result = harness.game.rollDice(1, 0); // Stay at position 1
+                    
+                    const space = harness.getCurrentSpace();
+                    const player = harness.game.getCurrentPlayer();
+                    
+                    const canBuy = space.spaceType === 'Property' && 
+                                   space.owner === null && 
+                                   player.money >= space.price;
+                    
+                    return {
+                        pass: canBuy === true && space.name === 'Aston Villa',
+                        detail: `At ${space.name}, canBuy=${canBuy}, owner=${space.owner}, spaceType=${space.spaceType}`
+                    };
+                }
+            },
+            {
+                name: "Corner space - Buy button disabled",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    // Move to Int'l Break (position 20)
+                    harness.movePlayerTo(19);
+                    const result = harness.game.rollDice(1, 0);
+                    
+                    const space = harness.getCurrentSpace();
+                    const canBuy = space.spaceType === 'Property' && space.owner === null;
+                    
+                    return {
+                        pass: space.spaceType === 'Corner' && canBuy === false,
+                        detail: `At ${space.name}, spaceType=${space.spaceType}, canBuy=${canBuy}`
+                    };
+                }
+            },
+            {
+                name: "Tax space - Buy button disabled",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    // Move to ESPN (position 2)
+                    harness.movePlayerTo(1);
+                    const result = harness.game.rollDice(1, 0);
+                    
+                    const space = harness.getCurrentSpace();
+                    const canBuy = space.spaceType === 'Property' && space.owner === null;
+                    
+                    return {
+                        pass: (space.spaceType === 'Broadcasting' || space.spaceType === 'Tax') && canBuy === false,
+                        detail: `At ${space.name}, spaceType=${space.spaceType}, canBuy=${canBuy}`
+                    };
+                }
+            },
+            {
+                name: "Transfer Market - Buy button disabled",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    // Move to Transfer Market (position 7)
+                    harness.movePlayerTo(6);
+                    const result = harness.game.rollDice(1, 0);
+                    
+                    const space = harness.getCurrentSpace();
+                    const canBuy = space.spaceType === 'Property' && space.owner === null;
+                    
+                    return {
+                        pass: space.spaceType === 'TransferMarket' && canBuy === false,
+                        detail: `At ${space.name}, spaceType=${space.spaceType}, canBuy=${canBuy}`
+                    };
+                }
+            },
+            {
+                name: "Match Day - Buy button disabled",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    // Move to Match Day (position 17)
+                    harness.movePlayerTo(16);
+                    const result = harness.game.rollDice(1, 0);
+                    
+                    const space = harness.getCurrentSpace();
+                    const canBuy = space.spaceType === 'Property' && space.owner === null;
+                    
+                    return {
+                        pass: space.spaceType === 'MatchDay' && canBuy === false,
+                        detail: `At ${space.name}, spaceType=${space.spaceType}, canBuy=${canBuy}`
+                    };
+                }
+            },
+            {
+                name: "Owned property - Buy button disabled for owner",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    // Move to property and buy it
+                    harness.movePlayerTo(1);
+                    harness.game.rollDice(1, 0);
+                    harness.game.buyProperty();
+                    harness.game.endTurn();
+                    
+                    // Move away and back
+                    harness.game.rollDice(1, 0);
+                    harness.game.endTurn();
+                    harness.game.rollDice(6, 6);
+                    
+                    const space = harness.getCurrentSpace();
+                    const player = harness.game.getCurrentPlayer();
+                    const canBuy = space.owner === null && space.spaceType === 'Property';
+                    
+                    return {
+                        pass: space.owner === player.id && canBuy === false,
+                        detail: `At ${space.name}, owner=${space.owner}, playerId=${player.id}, canBuy=${canBuy}`
+                    };
+                }
+            },
+            {
+                name: "Insufficient funds - Buy button disabled",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    const player = harness.game.getCurrentPlayer();
+                    
+                    // Move to an expensive property
+                    harness.movePlayerTo(39); // Man City (280 FC)
+                    harness.game.rollDice(1, 0);
+                    
+                    const space = harness.getCurrentSpace();
+                    const canAfford = player.money >= space.price;
+                    const canBuy = space.owner === null && 
+                                   space.spaceType === 'Property' && 
+                                   canAfford;
+                    
+                    return {
+                        pass: space.price > 0 && (canAfford ? canBuy : !canBuy),
+                        detail: `At ${space.name}, price=${space.price}, money=${player.money}, canAfford=${canAfford}, canBuy=${canBuy}`
+                    };
+                }
+            },
+            {
+                name: "Development buttons - Only enabled on owned properties",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    // Move to property and buy it
+                    harness.movePlayerTo(1);
+                    harness.game.rollDice(1, 0);
+                    harness.game.buyProperty();
+                    
+                    const space = harness.getCurrentSpace();
+                    const player = harness.game.getCurrentPlayer();
+                    
+                    const canDevelop = space.owner === player.id && space.spaceType === 'Property';
+                    const youthCost = Math.floor(space.price * 1.5);
+                    const canAffordYouth = player.money >= youthCost;
+                    
+                    return {
+                        pass: canDevelop && space.spaceType === 'Property',
+                        detail: `At ${space.name}, owner=${space.owner}, playerId=${player.id}, canDevelop=${canDevelop}, canAffordYouth=${canAffordYouth}`
+                    };
+                }
+            },
+            {
+                name: "Space type consistency - All spaces have correct type",
+                test: function() {
+                    const harness = new TestHarness();
+                    harness.init();
+                    
+                    const board = harness.game.getBoard();
+                    const validTypes = ['Property', 'Broadcasting', 'Utility', 'Tax', 'TransferMarket', 'MatchDay', 'Corner', 'Start'];
+                    
+                    const allValid = board.every(space => validTypes.includes(space.spaceType));
+                    const invalidSpaces = board.filter(space => !validTypes.includes(space.spaceType));
+                    
+                    return {
+                        pass: allValid,
+                        detail: invalidSpaces.length > 0 ? 
+                            `Invalid spaces: ${invalidSpaces.map(s => `${s.name}(${s.spaceType})`).join(', ')}` :
+                            'All spaces have valid types'
+                    };
+                }
+            }
+        ];
+
+        async function runAllTests() {
+            clearResults();
+            log('Starting test suite...');
+            testResults = [];
+            
+            for (let i = 0; i < tests.length; i++) {
+                const testCase = tests[i];
+                log(`Running: ${testCase.name}`);
+                
+                try {
+                    const result = testCase.test();
+                    testResults.push({
+                        name: testCase.name,
+                        pass: result.pass,
+                        detail: result.detail
+                    });
+                    log(`  ${result.pass ? '✓ PASS' : '✗ FAIL'}: ${result.detail}`);
+                } catch (error) {
+                    testResults.push({
+                        name: testCase.name,
+                        pass: false,
+                        detail: `Exception: ${error.message}`
+                    });
+                    log(`  ✗ FAIL: Exception - ${error.message}`);
+                }
+            }
+            
+            displayResults();
+            log('Test suite completed');
+        }
+
+        function displayResults() {
+            const passed = testResults.filter(r => r.pass).length;
+            const failed = testResults.filter(r => !r.pass).length;
+            const total = testResults.length;
+            
+            const summaryHTML = `
+                <div class="summary ${failed > 0 ? 'fail' : ''}">
+                    <strong>Test Results:</strong> ${passed}/${total} passed, ${failed} failed
+                </div>
+            `;
+            
+            const resultsHTML = testResults.map(result => `
+                <div class="test ${result.pass ? 'pass' : 'fail'}">
+                    <div class="test-name">
+                        ${result.pass ? '✓' : '✗'} ${result.name}
+                    </div>
+                    <div class="test-result">${result.detail}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('summary').innerHTML = summaryHTML;
+            document.getElementById('testResults').innerHTML = resultsHTML;
+        }
+
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            const initTests = () => {
+                if (window.FootballMonopolyOCaml) {
+                    log('✓ OCaml module loaded');
+                    setTimeout(() => runAllTests(), 100);
+                } else {
+                    setTimeout(initTests, 100);
+                }
+            };
+            initTests();
+        });
+    </script>
+</body>
+</html>

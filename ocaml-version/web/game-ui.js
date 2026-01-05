@@ -5,6 +5,7 @@ class GameUI {
         this.gameStarted = false;
         this.numPlayers = 2;
         this.playerNames = ['Manager 1', 'Manager 2'];
+        this.hasRolled = false; // Track if player has rolled this turn
     }
 
     init() {
@@ -103,6 +104,7 @@ class GameUI {
         console.log('rollDice result:', result);
         if (result.success) {
             // Disable roll button until turn ends
+            this.hasRolled = true;
             document.getElementById('rollDiceBtn').disabled = true;
             document.getElementById('endTurnBtn').disabled = false;
 
@@ -192,6 +194,7 @@ class GameUI {
         const result = this.game.endTurn();
         if (result.success) {
             // Re-enable roll button for next player
+            this.hasRolled = false;
             document.getElementById('rollDiceBtn').disabled = false;
             document.getElementById('endTurnBtn').disabled = true;
             document.getElementById('buyPropertyBtn').disabled = true;
@@ -305,6 +308,14 @@ class GameUI {
         const player = this.game.getCurrentPlayer();
         const board = this.game.getBoard();
         const currentSpace = board.find(s => s.position === player.position);
+
+        // All actions require having rolled first
+        if (!this.hasRolled) {
+            document.getElementById('buyPropertyBtn').disabled = true;
+            document.getElementById('buyYouthBtn').disabled = true;
+            document.getElementById('buyStarBtn').disabled = true;
+            return;
+        }
 
         // Enable buy property if on unowned property
         const canBuyProperty = currentSpace &&
