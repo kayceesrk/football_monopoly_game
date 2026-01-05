@@ -1,0 +1,22 @@
+(lang dune 3.11)
+(name football_monopoly)
+(version 0.1.0)
+
+(generate_opam_files true)
+
+(source (github yourusername/football_monopoly))
+(authors "Your Name")
+(maintainers "Your Name")
+(license MIT)
+
+(package
+ (name football_monopoly)
+ (synopsis "Functional football monopoly game in OCaml")
+ (description "A browser-based monopoly game with football clubs, compiled to JavaScript via js_of_ocaml")
+ (depends
+  (ocaml (>= 4.14.0))
+  dune
+  js_of_ocaml
+  js_of_ocaml-ppx
+  (alcotest :with-test)
+  (qcheck :with-test)))

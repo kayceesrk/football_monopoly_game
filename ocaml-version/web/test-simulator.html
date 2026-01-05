@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCaml Game Simulator</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ff00;
+            text-align: center;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        .controls {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        button {
+            background: #00c853;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00e676;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        #output {
+            background: #000;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+            line-height: 1.4;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 2px solid #00ff00;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff5555; }
+        .warning { color: #ffaa00; }
+        .info { color: #55aaff; }
+        .header { color: #ff00ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>⚽ OCaml Football Monopoly - Simulator</h1>
+
+    <div class="controls">
+        <button onclick="runSingleGame()">Run 1 Game</button>
+        <button onclick="runMultipleGames(10)">Run 10 Games</button>
+        <button onclick="runMultipleGames(100)">Run 100 Games</button>
+        <button onclick="analyzeEconomy()">Analyze Economy</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+
+    <div id="output">Ready to simulate...</div>
+
+    <script src="main.bc.js"></script>
+    <script>
+        const game = window.FootballMonopolyOCaml;
+        let output = document.getElementById('output');
+
+        function log(message, type = 'info') {
+            const span = document.createElement('span');
+            span.className = type;
+            span.textContent = message + '\\n';
+            output.appendChild(span);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            output.innerHTML = 'Ready to simulate...\\n';
+        }
+
+        function runSingleGame() {
+            log('\\n=== RUNNING SINGLE GAME SIMULATION ===', 'header');
+
+            game.startGame(2, ['Bot 1', 'Bot 2']);
+
+            let turns = 0;
+            let maxTurns = 1000; // Safety limit
+            let gameOver = false;
+
+            while (!gameOver && turns < maxTurns) {
+                turns++;
+
+                const rollResult = game.rollDice();
+                const player = game.getCurrentPlayer();
+
+                log(`Turn ${turns}: ${player.name} rolled, position ${rollResult.position}`, 'info');
+
+                // Try to buy property if available
+                const buyResult = game.buyProperty();
+                if (buyResult.success) {
+                    log(`  → Bought property! Money: ${player.money} FC`, 'success');
+                }
+
+                // Try to develop if we own it
+                const board = game.getBoard();
+                const currentSpace = board[rollResult.position];
+                if (currentSpace.owner === player.id && currentSpace.youthPlayers < 4) {
+                    const youthResult = game.buyYouth();
+                    if (youthResult.success) {
+                        log(`  → Bought youth player!`, 'success');
+                    }
+                }
+
+                // End turn
+                const endResult = game.endTurn();
+
+                // Check for winner
+                if (rollResult.winner || endResult.winner) {
+                    gameOver = true;
+                    const winner = rollResult.winner || endResult.winner;
+                    log(`\\n🏆 GAME OVER! Winner: ${winner}`, 'success');
+                    log(`Total turns: ${turns}`, 'info');
+
+                    // Show final stats
+                    const players = game.getPlayers();
+                    log('\\nFinal standings:', 'header');
+                    players.forEach(p => {
+                        log(`  ${p.name}: ${p.money} FC, ${p.properties.length} properties, ${p.bankrupt ? 'BANKRUPT' : 'Active'}`, p.bankrupt ? 'error' : 'success');
+                    });
+                }
+
+                if (turns >= maxTurns) {
+                    log('\\n⚠ Reached turn limit!', 'warning');
+                }
+            }
+        }
+
+        function runMultipleGames(numGames) {
+            log(`\\n=== RUNNING ${numGames} GAME SIMULATIONS ===`, 'header');
+
+            const stats = {
+                totalGames: numGames,
+                totalTurns: 0,
+                player1Wins: 0,
+                player2Wins: 0,
+                maxTurns: 0,
+                minTurns: Infinity,
+                turnCounts: [],
+                propertyPurchases: 0,
+                youthPurchases: 0,
+                starPurchases: 0
+            };
+
+            for (let gameNum = 1; gameNum <= numGames; gameNum++) {
+                game.startGame(2, ['Bot 1', 'Bot 2']);
+
+                let turns = 0;
+                let maxTurns = 1000;
+                let gameOver = false;
+                let purchases = { property: 0, youth: 0, star: 0 };
+
+                while (!gameOver && turns < maxTurns) {
+                    turns++;
+
+                    const rollResult = game.rollDice();
+
+                    // Try to buy property
+                    const buyResult = game.buyProperty();
+                    if (buyResult.success) {
+                        purchases.property++;
+                    }
+
+                    // Try to develop
+                    const board = game.getBoard();
+                    const player = game.getCurrentPlayer();
+                    const currentSpace = board[rollResult.position];
+
+                    if (currentSpace.owner === player.id) {
+                        if (currentSpace.youthPlayers < 4) {
+                            const youthResult = game.buyYouth();
+                            if (youthResult.success) {
+                                purchases.youth++;
+                            }
+                        } else if (!currentSpace.hasStar) {
+                            const starResult = game.buyStar();
+                            if (starResult.success) {
+                                purchases.star++;
+                            }
+                        }
+                    }
+
+                    // End turn
+                    const endResult = game.endTurn();
+
+                    // Check for winner
+                    if (rollResult.winner || endResult.winner) {
+                        gameOver = true;
+                        const winner = rollResult.winner || endResult.winner;
+
+                        if (winner.includes('Bot 1')) {
+                            stats.player1Wins++;
+                        } else {
+                            stats.player2Wins++;
+                        }
+
+                        stats.totalTurns += turns;
+                        stats.turnCounts.push(turns);
+                        stats.maxTurns = Math.max(stats.maxTurns, turns);
+                        stats.minTurns = Math.min(stats.minTurns, turns);
+                        stats.propertyPurchases += purchases.property;
+                        stats.youthPurchases += purchases.youth;
+                        stats.starPurchases += purchases.star;
+                    }
+                }
+
+                if (gameNum % 10 === 0 || gameNum === numGames) {
+                    log(`Completed ${gameNum}/${numGames} games...`, 'info');
+                }
+            }
+
+            // Display results
+            log('\\n=== SIMULATION RESULTS ===', 'header');
+            log(`Total games: ${stats.totalGames}`, 'info');
+            log(`\\nWin Distribution:`, 'header');
+            log(`  Player 1: ${stats.player1Wins} (${(stats.player1Wins/stats.totalGames*100).toFixed(1)}%)`, 'success');
+            log(`  Player 2: ${stats.player2Wins} (${(stats.player2Wins/stats.totalGames*100).toFixed(1)}%)`, 'success');
+
+            const avgTurns = stats.totalTurns / stats.totalGames;
+            log(`\\nGame Length:`, 'header');
+            log(`  Average turns: ${avgTurns.toFixed(1)}`, 'info');
+            log(`  Min turns: ${stats.minTurns}`, 'info');
+            log(`  Max turns: ${stats.maxTurns}`, 'info');
+            log(`  Median turns: ${getMedian(stats.turnCounts).toFixed(1)}`, 'info');
+
+            log(`\\nEconomic Activity:`, 'header');
+            log(`  Avg properties per game: ${(stats.propertyPurchases / stats.totalGames).toFixed(1)}`, 'info');
+            log(`  Avg youth players per game: ${(stats.youthPurchases / stats.totalGames).toFixed(1)}`, 'info');
+            log(`  Avg star players per game: ${(stats.starPurchases / stats.totalGames).toFixed(1)}`, 'info');
+
+            // Balance analysis
+            log(`\\n=== BALANCE ANALYSIS ===`, 'header');
+            const winDiff = Math.abs(stats.player1Wins - stats.player2Wins);
+            const balanceScore = (1 - winDiff / stats.totalGames) * 100;
+            log(`Balance Score: ${balanceScore.toFixed(1)}% (${balanceScore > 95 ? 'EXCELLENT' : balanceScore > 90 ? 'GOOD' : balanceScore > 80 ? 'OK' : 'NEEDS WORK'})`,
+                balanceScore > 90 ? 'success' : balanceScore > 80 ? 'warning' : 'error');
+
+            if (avgTurns < 30) {
+                log('⚠ Games are very short - may need to increase starting money or reduce costs', 'warning');
+            } else if (avgTurns > 200) {
+                log('⚠ Games are very long - may need to increase rents or reduce starting money', 'warning');
+            } else {
+                log('✓ Game length is well-balanced', 'success');
+            }
+        }
+
+        function analyzeEconomy() {
+            log('\\n=== ECONOMIC ANALYSIS ===', 'header');
+
+            game.startGame(2, ['Analyst 1', 'Analyst 2']);
+            const board = game.getBoard();
+
+            // Analyze properties
+            const properties = board.filter(s =>
+                s.name !== 'START' &&
+                !s.name.includes('Transfer') &&
+                !s.name.includes('Match') &&
+                !s.name.includes('WINDOW') &&
+                !s.name.includes('VAR') &&
+                !s.name.includes('UCL') &&
+                !s.name.includes('Tax') &&
+                !s.name.includes('Agent') &&
+                !s.name.includes('FFP')
+            );
+
+            log(`\\nBoard Configuration:`, 'header');
+            log(`  Total spaces: ${board.length}`, 'info');
+            log(`  Purchasable properties: ${properties.length}`, 'info');
+
+            const players = game.getPlayers();
+            log(`\\nStarting Conditions:`, 'header');
+            log(`  Starting money: ${players[0].money} FC`, 'info');
+            log(`  Number of players: ${players.length}`, 'info');
+
+            log(`\\nProperty Distribution:`, 'header');
+            properties.slice(0, 10).forEach(p => {
+                log(`  ${p.position}: ${p.name} (Owner: ${p.owner === null ? 'None' : p.owner}, Youth: ${p.youthPlayers}, Star: ${p.hasStar})`, 'info');
+            });
+
+            log('\\n✓ Economy analysis complete', 'success');
+        }
+
+        function getMedian(arr) {
+            const sorted = [...arr].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+        }
+
+        // Initial message
+        log('OCaml game engine loaded successfully!', 'success');
+        log('Click a button above to start simulation.\\n', 'info');
+    </script>
+</body>
+</html>

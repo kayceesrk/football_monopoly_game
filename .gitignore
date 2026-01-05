@@ -1,0 +1,15 @@
+# OCaml build artifacts
+ocaml-version/_build/
+ocaml-version/*.install
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

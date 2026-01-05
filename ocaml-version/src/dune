@@ -1,0 +1,11 @@
+(library
+ (name football_monopoly)
+ (modules game_types game_state game_logic)
+ (libraries))
+
+(executable
+ (name main)
+ (modules main)
+ (libraries football_monopoly js_of_ocaml js_of_ocaml-ppx)
+ (modes js)
+ (preprocess (pps js_of_ocaml-ppx)))

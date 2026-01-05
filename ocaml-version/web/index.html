@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ Football Monopoly (OCaml)</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>⚽ FOOTBALL MONOPOLY <span style="font-size: 0.5em; color: #ffeb3b;">OCaml Edition</span></h1>
+            <div class="game-info">
+                <div class="current-player">Current Turn: <span id="currentPlayerName">-</span></div>
+                <button id="startGameBtn" class="btn-primary">Start New Game</button>
+            </div>
+        </header>
+
+        <div class="main-game">
+            <div class="board-container">
+                <div id="gameBoard" class="game-board">
+                    <!-- Corner: GO / Starting Line -->
+                    <div class="space corner top-right" data-position="0">
+                        <div class="space-content">
+                            <div class="corner-title">⚽ START</div>
+                            <div class="corner-subtitle">Collect 200 FC</div>
+                        </div>
+                    </div>
+
+                    <!-- Top Row (right to left) -->
+                    <div class="space property" data-position="1" data-color="red">
+                        <div class="color-bar red"></div>
+                        <div class="space-name">Aston Villa</div>
+                        <div class="space-price">60 FC</div>
+                    </div>
+                    <div class="space special" data-position="2">
+                        <div class="space-name">⚡ Transfer Market</div>
+                    </div>
+                    <div class="space property" data-position="3" data-color="red">
+                        <div class="color-bar red"></div>
+                        <div class="space-name">Newcastle</div>
+                        <div class="space-price">60 FC</div>
+                    </div>
+                    <div class="space tax" data-position="4">
+                        <div class="space-name">💰 Agent Fees</div>
+                        <div class="space-price">Pay 200 FC</div>
+                    </div>
+                    <div class="space broadcasting" data-position="5">
+                        <div class="space-name">📺 Sky Sports</div>
+                        <div class="space-price">200 FC</div>
+                    </div>
+                    <div class="space property" data-position="6" data-color="lightblue">
+                        <div class="color-bar lightblue"></div>
+                        <div class="space-name">Napoli</div>
+                        <div class="space-price">100 FC</div>
+                    </div>
+                    <div class="space special" data-position="7">
+                        <div class="space-name">🎲 Match Day</div>
+                    </div>
+                    <div class="space property" data-position="8" data-color="lightblue">
+                        <div class="color-bar lightblue"></div>
+                        <div class="space-name">AS Roma</div>
+                        <div class="space-price">100 FC</div>
+                    </div>
+                    <div class="space property" data-position="9" data-color="lightblue">
+                        <div class="color-bar lightblue"></div>
+                        <div class="space-name">Lazio</div>
+                        <div class="space-price">120 FC</div>
+                    </div>
+
+                    <!-- Corner: Transfer Window -->
+                    <div class="space corner top-left" data-position="10">
+                        <div class="space-content">
+                            <div class="corner-title">🔄 TRANSFER</div>
+                            <div class="corner-subtitle">WINDOW</div>
+                        </div>
+                    </div>
+
+                    <!-- Left Column (top to bottom) -->
+                    <div class="space property" data-position="11" data-color="pink">
+                        <div class="color-bar pink"></div>
+                        <div class="space-name">Benfica</div>
+                        <div class="space-price">140 FC</div>
+                    </div>
+                    <div class="space utility" data-position="12">
+                        <div class="space-name">⚡ Sponsorship</div>
+                        <div class="space-price">150 FC</div>
+                    </div>
+                    <div class="space property" data-position="13" data-color="pink">
+                        <div class="color-bar pink"></div>
+                        <div class="space-name">Porto</div>
+                        <div class="space-price">140 FC</div>
+                    </div>
+                    <div class="space property" data-position="14" data-color="pink">
+                        <div class="color-bar pink"></div>
+                        <div class="space-name">Sevilla</div>
+                        <div class="space-price">160 FC</div>
+                    </div>
+                    <div class="space broadcasting" data-position="15">
+                        <div class="space-name">📺 ESPN</div>
+                        <div class="space-price">200 FC</div>
+                    </div>
+                    <div class="space property" data-position="16" data-color="orange">
+                        <div class="color-bar orange"></div>
+                        <div class="space-name">Dortmund</div>
+                        <div class="space-price">180 FC</div>
+                    </div>
+                    <div class="space special" data-position="17">
+                        <div class="space-name">⚡ Transfer Market</div>
+                    </div>
+                    <div class="space property" data-position="18" data-color="orange">
+                        <div class="color-bar orange"></div>
+                        <div class="space-name">Atletico Madrid</div>
+                        <div class="space-price">180 FC</div>
+                    </div>
+                    <div class="space property" data-position="19" data-color="orange">
+                        <div class="color-bar orange"></div>
+                        <div class="space-name">Leipzig</div>
+                        <div class="space-price">200 FC</div>
+                    </div>
+
+                    <!-- Corner: VAR Review -->
+                    <div class="space corner bottom-left" data-position="20">
+                        <div class="space-content">
+                            <div class="corner-title">🎥 VAR</div>
+                            <div class="corner-subtitle">REVIEW</div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row (left to right) -->
+                    <div class="space property" data-position="21" data-color="yellow">
+                        <div class="color-bar yellow"></div>
+                        <div class="space-name">Tottenham</div>
+                        <div class="space-price">220 FC</div>
+                    </div>
+                    <div class="space special" data-position="22">
+                        <div class="space-name">🎲 Match Day</div>
+                    </div>
+                    <div class="space property" data-position="23" data-color="yellow">
+                        <div class="color-bar yellow"></div>
+                        <div class="space-name">Arsenal</div>
+                        <div class="space-price">220 FC</div>
+                    </div>
+                    <div class="space property" data-position="24" data-color="yellow">
+                        <div class="color-bar yellow"></div>
+                        <div class="space-name">Chelsea</div>
+                        <div class="space-price">240 FC</div>
+                    </div>
+                    <div class="space broadcasting" data-position="25">
+                        <div class="space-name">📺 beIN Sports</div>
+                        <div class="space-price">200 FC</div>
+                    </div>
+                    <div class="space property" data-position="26" data-color="green">
+                        <div class="color-bar green"></div>
+                        <div class="space-name">Liverpool</div>
+                        <div class="space-price">260 FC</div>
+                    </div>
+                    <div class="space property" data-position="27" data-color="green">
+                        <div class="color-bar green"></div>
+                        <div class="space-name">Man City</div>
+                        <div class="space-price">260 FC</div>
+                    </div>
+                    <div class="space utility" data-position="28">
+                        <div class="space-name">⚡ Stadium Rights</div>
+                        <div class="space-price">150 FC</div>
+                    </div>
+                    <div class="space property" data-position="29" data-color="green">
+                        <div class="color-bar green"></div>
+                        <div class="space-name">Bayern Munich</div>
+                        <div class="space-price">280 FC</div>
+                    </div>
+
+                    <!-- Corner: Champions League -->
+                    <div class="space corner bottom-right" data-position="30">
+                        <div class="space-content">
+                            <div class="corner-title">🏆 UCL</div>
+                            <div class="corner-subtitle">FINAL</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (bottom to top) -->
+                    <div class="space property" data-position="31" data-color="darkblue">
+                        <div class="color-bar darkblue"></div>
+                        <div class="space-name">PSG</div>
+                        <div class="space-price">300 FC</div>
+                    </div>
+                    <div class="space property" data-position="32" data-color="darkblue">
+                        <div class="color-bar darkblue"></div>
+                        <div class="space-name">Juventus</div>
+                        <div class="space-price">300 FC</div>
+                    </div>
+                    <div class="space special" data-position="33">
+                        <div class="space-name">⚡ Transfer Market</div>
+                    </div>
+                    <div class="space property" data-position="34" data-color="darkblue">
+                        <div class="color-bar darkblue"></div>
+                        <div class="space-name">Man United</div>
+                        <div class="space-price">320 FC</div>
+                    </div>
+                    <div class="space broadcasting" data-position="35">
+                        <div class="space-name">📺 BT Sport</div>
+                        <div class="space-price">200 FC</div>
+                    </div>
+                    <div class="space special" data-position="36">
+                        <div class="space-name">🎲 Match Day</div>
+                    </div>
+                    <div class="space property" data-position="37" data-color="purple">
+                        <div class="color-bar purple"></div>
+                        <div class="space-name">Real Madrid</div>
+                        <div class="space-price">350 FC</div>
+                    </div>
+                    <div class="space tax" data-position="38">
+                        <div class="space-name">⚖️ FFP Fine</div>
+                        <div class="space-price">Pay 100 FC</div>
+                    </div>
+                    <div class="space property" data-position="39" data-color="purple">
+                        <div class="color-bar purple"></div>
+                        <div class="space-name">Barcelona</div>
+                        <div class="space-price">400 FC</div>
+                    </div>
+
+                    <!-- Center Board -->
+                    <div class="center-board">
+                        <h2>⚽ FOOTBALL MONOPOLY</h2>
+                        <div id="diceDisplay" class="dice-display">
+                            <div class="die" id="die1">?</div>
+                            <div class="die" id="die2">?</div>
+                        </div>
+                        <button id="rollDiceBtn" class="btn-roll" disabled>Roll Dice</button>
+                        <div id="gameMessage" class="game-message"></div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="players-panel">
+                    <h3>⚽ Managers</h3>
+                    <div id="playersList"></div>
+                </div>
+
+                <div class="actions-panel">
+                    <h3>🎮 Actions</h3>
+                    <button id="buyPropertyBtn" class="btn-action" disabled>Buy Club</button>
+                    <button id="buyYouthBtn" class="btn-action" disabled>Buy Youth Player (150% price)</button>
+                    <button id="buyStarBtn" class="btn-action" disabled>Buy Star Player (200% price)</button>
+                    <button id="endTurnBtn" class="btn-action" disabled>End Turn</button>
+                </div>
+
+                <div class="property-info">
+                    <h3>📋 Property Info</h3>
+                    <div id="propertyDetails">Start a game to begin!</div>
+                </div>
+
+                <div class="rules-panel">
+                    <h3>📜 Quick Rules</h3>
+                    <ul>
+                        <li>Start with 2000 FC</li>
+                        <li>Roll dice to move around the board</li>
+                        <li>Buy clubs to build your empire</li>
+                        <li>Youth Players: 150% of club price (4 max)</li>
+                        <li>Star Players: 200% of club price</li>
+                        <li>Own all clubs in a league for 2x rent!</li>
+                        <li>Pass START: collect 200 FC</li>
+                        <li>Last manager standing wins!</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="main.bc.js"></script>
+    <script src="game-ui.js"></script>
+</body>
+</html>

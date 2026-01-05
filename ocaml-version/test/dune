@@ -1,0 +1,3 @@
+(executables
+ (names test_game test_simulator)
+ (libraries football_monopoly))

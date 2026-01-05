@@ -1,0 +1,32 @@
+opam-version: "2.0"
+name: "football_monopoly"
+version: "0.1.0"
+synopsis: "Functional football monopoly game in OCaml"
+description:
+  "A browser-based monopoly game with football clubs, compiled to JavaScript via js_of_ocaml"
+maintainer: ["Your Name"]
+authors: ["Your Name"]
+license: "MIT"
+depends: [
+  "dune" {>= "3.11"}
+  "ocaml" {>= "4.14.0"}
+  "js_of_ocaml" {>= "5.0"}
+  "js_of_ocaml-ppx" {>= "5.0"}
+  "alcotest" {with-test}
+  "qcheck" {with-test}
+  "odoc" {with-doc}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]
