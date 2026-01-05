@@ -1,5 +1,6 @@
 (* Core game state initialization and board setup *)
 open Game_types
+open Club_facts
 
 let empty_property_state = {
   owner = None;
@@ -15,7 +16,7 @@ let create_board () : space array =
         name = "Aston Villa"; price = 60;
         rent = [|2; 10; 30; 90; 160; 250|];
         color = Red;
-        fact = "Founded in 1874, Aston Villa won the European Cup in 1982 and has 7 league titles.";
+        facts = aston_villa_facts;
       }; property_state = empty_property_state };
 
     { position = 2; space_type = TransferMarket; property_state = empty_property_state };
@@ -24,7 +25,7 @@ let create_board () : space array =
         name = "Newcastle"; price = 60;
         rent = [|4; 20; 60; 180; 320; 450|];
         color = Red;
-        fact = "Newcastle United holds the record for the largest sports sponsorship deal in history.";
+        facts = newcastle_facts;
       }; property_state = empty_property_state };
 
     { position = 4; space_type = Tax { name = "Agent Fees"; amount = 200 };
@@ -37,7 +38,7 @@ let create_board () : space array =
         name = "Napoli"; price = 100;
         rent = [|6; 30; 90; 270; 400; 550|];
         color = LightBlue;
-        fact = "Napoli's stadium is named after Diego Maradona, who led them to their only 2 Serie A titles.";
+        facts = napoli_facts;
       }; property_state = empty_property_state };
 
     { position = 7; space_type = MatchDay; property_state = empty_property_state };
@@ -46,14 +47,14 @@ let create_board () : space array =
         name = "AS Roma"; price = 100;
         rent = [|6; 30; 90; 270; 400; 550|];
         color = LightBlue;
-        fact = "AS Roma's mascot is a she-wolf, referencing the legend of Rome's founding by Romulus and Remus.";
+        facts = as_roma_facts;
       }; property_state = empty_property_state };
 
     { position = 9; space_type = Property {
         name = "Lazio"; price = 120;
         rent = [|8; 40; 100; 300; 450; 600|];
         color = LightBlue;
-        fact = "Lazio won both the Serie A title and Coppa Italia in 2000, plus reached the UEFA Cup final.";
+        facts = lazio_facts;
       }; property_state = empty_property_state };
 
     { position = 10; space_type = Corner "Transfer Window"; property_state = empty_property_state };
@@ -62,7 +63,7 @@ let create_board () : space array =
         name = "AC Milan"; price = 140;
         rent = [|10; 50; 150; 450; 625; 750|];
         color = Pink;
-        fact = "AC Milan has won 7 Champions League titles, second only to Real Madrid's 14.";
+        facts = ac_milan_facts;
       }; property_state = empty_property_state };
 
     { position = 12; space_type = Utility { name = "Training Ground"; price = 150 };
@@ -72,14 +73,14 @@ let create_board () : space array =
         name = "Inter Milan"; price = 140;
         rent = [|10; 50; 150; 450; 625; 750|];
         color = Pink;
-        fact = "Inter won an unprecedented treble in 2010: Serie A, Coppa Italia, and Champions League.";
+        facts = inter_milan_facts;
       }; property_state = empty_property_state };
 
     { position = 14; space_type = Property {
         name = "Ajax"; price = 160;
         rent = [|12; 60; 180; 500; 700; 900|];
         color = Pink;
-        fact = "Ajax's youth academy has produced Cruyff, Van Basten, Bergkamp, De Jong, and De Ligt.";
+        facts = ajax_facts;
       }; property_state = empty_property_state };
 
     { position = 15; space_type = Broadcasting { name = "ESPN"; price = 200 };
@@ -89,7 +90,7 @@ let create_board () : space array =
         name = "Atletico Madrid"; price = 180;
         rent = [|14; 70; 200; 550; 750; 950|];
         color = Orange;
-        fact = "Atletico Madrid beat Barcelona and Real Madrid to win La Liga in 2014 and 2021.";
+        facts = atletico_madrid_facts;
       }; property_state = empty_property_state };
 
     { position = 17; space_type = TransferMarket; property_state = empty_property_state };
@@ -98,14 +99,14 @@ let create_board () : space array =
         name = "Borussia Dortmund"; price = 180;
         rent = [|14; 70; 200; 550; 750; 950|];
         color = Orange;
-        fact = "Dortmund's 'Yellow Wall' is the largest terrace for standing spectators in European football.";
+        facts = borussia_dortmund_facts;
       }; property_state = empty_property_state };
 
     { position = 19; space_type = Property {
         name = "Porto"; price = 200;
         rent = [|16; 80; 220; 600; 800; 1000|];
         color = Orange;
-        fact = "Porto won the Champions League in 2004 under José Mourinho with an unbeaten run.";
+        facts = porto_facts;
       }; property_state = empty_property_state };
 
     { position = 20; space_type = Corner "Int'l Break"; property_state = empty_property_state };
@@ -114,7 +115,7 @@ let create_board () : space array =
         name = "Tottenham"; price = 220;
         rent = [|18; 90; 250; 700; 875; 1050|];
         color = Yellow;
-        fact = "Tottenham became the first British club to win a European trophy, the Cup Winners' Cup in 1963.";
+        facts = tottenham_facts;
       }; property_state = empty_property_state };
 
     { position = 22; space_type = MatchDay; property_state = empty_property_state };
@@ -123,14 +124,14 @@ let create_board () : space array =
         name = "Juventus"; price = 220;
         rent = [|18; 90; 250; 700; 875; 1050|];
         color = Yellow;
-        fact = "Juventus holds the record for most consecutive Serie A titles with 9 straight (2012-2020).";
+        facts = juventus_facts;
       }; property_state = empty_property_state };
 
     { position = 24; space_type = Property {
         name = "Arsenal"; price = 240;
         rent = [|20; 100; 300; 750; 925; 1100|];
         color = Yellow;
-        fact = "Arsenal's 'Invincibles' went unbeaten for the entire 2003-04 Premier League season (38 games).";
+        facts = arsenal_facts;
       }; property_state = empty_property_state };
 
     { position = 25; space_type = Broadcasting { name = "DAZN"; price = 200 };
@@ -140,14 +141,14 @@ let create_board () : space array =
         name = "PSG"; price = 260;
         rent = [|22; 110; 330; 800; 975; 1150|];
         color = Green;
-        fact = "PSG's record signing Neymar (€222M in 2017) remains the most expensive transfer in history.";
+        facts = psg_facts;
       }; property_state = empty_property_state };
 
     { position = 27; space_type = Property {
         name = "Chelsea"; price = 260;
         rent = [|22; 110; 330; 800; 975; 1150|];
         color = Green;
-        fact = "Chelsea won the Champions League in 2021 after finishing 4th in the Premier League.";
+        facts = chelsea_facts;
       }; property_state = empty_property_state };
 
     { position = 28; space_type = Utility { name = "Medical Center"; price = 150 };
@@ -157,7 +158,7 @@ let create_board () : space array =
         name = "Man City"; price = 280;
         rent = [|24; 120; 360; 850; 1025; 1200|];
         color = Green;
-        fact = "Man City won 4 consecutive Premier League titles (2021-2024) and the treble in 2023.";
+        facts = man_city_facts;
       }; property_state = empty_property_state };
 
     { position = 30; space_type = Corner "Relegation"; property_state = empty_property_state };
@@ -166,14 +167,14 @@ let create_board () : space array =
         name = "Liverpool FC"; price = 300;
         rent = [|26; 130; 390; 900; 1100; 1275|];
         color = DarkBlue;
-        fact = "Liverpool won 6 Champions League titles and holds the record for most European trophies by an English club.";
+        facts = liverpool_facts;
       }; property_state = empty_property_state };
 
     { position = 32; space_type = Property {
         name = "Bayern Munich"; price = 300;
         rent = [|26; 130; 390; 900; 1100; 1275|];
         color = DarkBlue;
-        fact = "Bayern Munich has won 11 consecutive Bundesliga titles (2013-2023) and 6 Champions League titles.";
+        facts = bayern_munich_facts;
       }; property_state = empty_property_state };
 
     { position = 33; space_type = TransferMarket; property_state = empty_property_state };
@@ -182,7 +183,7 @@ let create_board () : space array =
         name = "Man United"; price = 320;
         rent = [|28; 150; 450; 1000; 1200; 1400|];
         color = DarkBlue;
-        fact = "Man United's treble-winning 1999 season included a dramatic Champions League final comeback.";
+        facts = man_united_facts;
       }; property_state = empty_property_state };
 
     { position = 35; space_type = Broadcasting { name = "BT Sport"; price = 200 };
@@ -194,7 +195,7 @@ let create_board () : space array =
         name = "Real Madrid"; price = 350;
         rent = [|35; 175; 500; 1100; 1300; 1500|];
         color = Purple;
-        fact = "Real Madrid has won a record 14 Champions League titles, including 5 in the last decade.";
+        facts = real_madrid_facts;
       }; property_state = empty_property_state };
 
     { position = 38; space_type = Tax { name = "FFP Fine"; amount = 100 };
@@ -204,7 +205,7 @@ let create_board () : space array =
         name = "Barcelona"; price = 400;
         rent = [|50; 200; 600; 1400; 1700; 2000|];
         color = Purple;
-        fact = "Barcelona's tiki-taka style under Guardiola led to 6 trophies in 2009, including the treble.";
+        facts = barcelona_facts;
       }; property_state = empty_property_state };
   |]
 

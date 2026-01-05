@@ -24,8 +24,16 @@ let owns_monopoly state player color =
     space.property_state.owner = Some player.id
   ) color_properties
 
+(* Helper: Check if player owns any property in a color *)
+let owns_property_in_color state player_id color =
+  Array.exists (fun space ->
+    match space.space_type with
+    | Property p when p.color = color && space.property_state.owner = Some player_id -> true
+    | _ -> false
+  ) state.board
+
 (* Calculate rent for a property *)
-let calculate_rent state space player_id =
+let calculate_rent state space owner_id payer_id =
   match space.space_type with
   | Property prop ->
       let dev_level =
@@ -34,9 +42,18 @@ let calculate_rent state space player_id =
       in
       let base_rent = prop.rent.(dev_level) in
       (* Double rent for monopoly without development *)
-      if dev_level = 0 && owns_monopoly state { id = player_id; name = ""; money = 0; position = 0; properties = []; bankrupt = false } prop.color
-      then base_rent * 2
-      else base_rent
+      let monopoly_rent =
+        if dev_level = 0 && owns_monopoly state { id = owner_id; name = ""; money = 0; position = 0; properties = []; bankrupt = false } prop.color
+        then base_rent * 2
+        else base_rent
+      in
+      (* Derby Match: Double rent if payer owns a club in same league *)
+      let final_rent =
+        if owns_property_in_color state payer_id prop.color && payer_id <> owner_id
+        then monopoly_rent * 2
+        else monopoly_rent
+      in
+      final_rent
   | _ -> 0
 
 (* Apply a roll action *)
@@ -122,7 +139,7 @@ let handle_landing state =
       (* Pay rent *)
       (match space.property_state.owner with
        | Some owner_id ->
-           let rent = calculate_rent state space owner_id in
+           let rent = calculate_rent state space owner_id player.id in
            let updated_player = { player with money = player.money - rent } in
            let owner = List.find (fun p -> p.id = owner_id) state.players in
            let updated_owner = { owner with money = owner.money + rent } in

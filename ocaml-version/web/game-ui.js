@@ -19,7 +19,10 @@ class GameUI {
     }
 
     setupEventListeners() {
-        document.getElementById('startGameBtn').addEventListener('click', () => this.startGame());
+        document.getElementById('startGameBtn').addEventListener('click', () => this.showGameSetup());
+        document.getElementById('startGameSubmit').addEventListener('click', () => this.startGame());
+        document.getElementById('cancelGameSetup').addEventListener('click', () => this.hideGameSetup());
+        document.getElementById('numPlayers').addEventListener('change', () => this.updatePlayerNameInputs());
         document.getElementById('rollDiceBtn').addEventListener('click', () => this.rollDice());
         document.getElementById('buyPropertyBtn').addEventListener('click', () => this.buyProperty());
         document.getElementById('buyYouthBtn').addEventListener('click', () => this.buyYouth());
@@ -35,32 +38,41 @@ class GameUI {
         });
     }
 
-    startGame() {
-        console.log('startGame() called');
-        if (!this.game) {
-            console.error('Game engine not loaded!');
-            alert('Game engine not loaded!');
-            return;
-        }
+    showGameSetup() {
+        document.getElementById('gameSetupForm').style.display = 'block';
+        document.getElementById('startGameBtn').style.display = 'none';
+        this.updatePlayerNameInputs();
+    }
 
-        console.log('About to show prompt for number of players...');
-        // Ask for number of players
-        const numPlayersStr = prompt("How many managers? (2-4)", "2");
-        console.log('User entered numPlayers:', numPlayersStr);
-        const numPlayers = parseInt(numPlayersStr);
+    hideGameSetup() {
+        document.getElementById('gameSetupForm').style.display = 'none';
+        document.getElementById('startGameBtn').style.display = 'inline-block';
+    }
 
-        if (!numPlayers || numPlayers < 2 || numPlayers > 4) {
-            alert("Please enter a number between 2 and 4");
-            return;
-        }
+    updatePlayerNameInputs() {
+        const numPlayers = parseInt(document.getElementById('numPlayers').value);
+        const container = document.getElementById('playerNamesContainer');
+        container.innerHTML = '';
+        container.className = 'player-names active';
 
-        // Ask for player names
-        const playerNames = [];
         for (let i = 1; i <= numPlayers; i++) {
-            console.log(`Asking for player ${i} name...`);
-            const name = prompt(`Manager ${i} name:`, `Manager ${i}`);
-            console.log(`Player ${i} name:`, name);
-            playerNames.push(name || `Manager ${i}`);
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group';
+            formGroup.innerHTML = `
+                <label for="player${i}Name">Manager ${i} Name:</label>
+                <input type="text" id="player${i}Name" value="Manager ${i}" placeholder="Manager ${i}">
+            `;
+            container.appendChild(formGroup);
+        }
+    }
+
+    startGame() {
+        const numPlayers = parseInt(document.getElementById('numPlayers').value);
+        const playerNames = [];
+
+        for (let i = 1; i <= numPlayers; i++) {
+            const nameInput = document.getElementById(`player${i}Name`);
+            playerNames.push(nameInput.value || `Manager ${i}`);
         }
 
         console.log('Starting game with:', numPlayers, 'players:', playerNames);
@@ -73,6 +85,7 @@ class GameUI {
             this.gameStarted = true;
             document.getElementById('rollDiceBtn').disabled = false;
             document.getElementById('startGameBtn').disabled = true;
+            this.hideGameSetup();
             this.showMessage('Game started! Roll the dice to begin.', 'success');
             this.updateUI();
         }
@@ -113,9 +126,11 @@ class GameUI {
                 message += ` - Paid ${result.taxPaid.amount} FC tax`;
             }
 
-            // Show club fact if available
+            // Show club fact in separate box if available
             if (result.spaceFact) {
-                message += `\n\n💡 ${result.spaceFact}`;
+                this.showClubFact(result.spaceFact);
+            } else {
+                this.hideClubFact();
             }
 
             this.showMessage(message, 'info');
@@ -360,6 +375,18 @@ class GameUI {
         }, 3000);
     }
 
+    showClubFact(fact) {
+        const factBox = document.getElementById('clubFactBox');
+        const factText = document.getElementById('clubFactText');
+        factText.textContent = fact;
+        factBox.style.display = 'block';
+    }
+
+    hideClubFact() {
+        const factBox = document.getElementById('clubFactBox');
+        factBox.style.display = 'none';
+    }
+
     endGame() {
         document.getElementById('rollDiceBtn').disabled = true;
         document.getElementById('endTurnBtn').disabled = true;
@@ -368,6 +395,7 @@ class GameUI {
         document.getElementById('buyStarBtn').disabled = true;
         document.getElementById('startGameBtn').disabled = false;
         this.gameStarted = false;
+        this.hideClubFact();
     }
 }
 

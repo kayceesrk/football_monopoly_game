@@ -42,7 +42,11 @@ let () =
              (* Determine space name and fact *)
              let (space_name, space_fact) = match space.space_type with
                | Game_types.Start -> ("START", None)
-               | Game_types.Property p -> (p.name, Some p.fact)
+               | Game_types.Property p ->
+                   (* Randomly select a fact from the facts array *)
+                   let fact_index = Random.int (Array.length p.facts) in
+                   let selected_fact = p.facts.(fact_index) in
+                   (p.name, Some selected_fact)
                | Game_types.Broadcasting b -> (b.name, None)
                | Game_types.Utility u -> (u.name, None)
                | Game_types.Tax t -> (t.name, None)
@@ -74,7 +78,7 @@ let () =
                | Game_types.Property _ ->
                    (match space.property_state.owner with
                     | Some owner_id ->
-                        let rent = Game_logic.calculate_rent new_state space owner_id in
+                        let rent = Game_logic.calculate_rent new_state space owner_id curr_player.id in
                         let owner = List.find (fun player -> player.Game_types.id = owner_id) new_state.players in
                         let rent_obj = Js.Unsafe.obj [|
                           ("amount", Js.Unsafe.inject rent);
