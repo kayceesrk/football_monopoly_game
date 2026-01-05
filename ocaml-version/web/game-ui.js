@@ -100,7 +100,11 @@ class GameUI {
             let message = `Rolled ${die1} + ${die2} = ${die1 + die2}. Landed on ${result.spaceName}`;
 
             // Add details based on what happened
-            if (result.canBuy) {
+            if (result.event && result.cardText) {
+                // Show card text for Transfer Market or Match Day
+                const cardIcon = result.event === 'transferMarket' ? '⚡' : '🎲';
+                message += `\n${cardIcon} ${result.cardText}`;
+            } else if (result.canBuy) {
                 message += ' - Available to buy!';
                 document.getElementById('buyPropertyBtn').disabled = false;
             } else if (result.rentPaid) {
@@ -110,17 +114,6 @@ class GameUI {
             }
 
             this.showMessage(message, 'info');
-
-            // Handle special events
-            if (result.event) {
-                setTimeout(() => {
-                    if (result.event === 'transferMarket') {
-                        alert('⚡ Transfer Market!\n\nYou drew a card. Check your money to see the effect!');
-                    } else if (result.event === 'matchDay') {
-                        alert('🎲 Match Day!\n\nYou drew a card. Check your money to see the effect!');
-                    }
-                }, 600);
-            }
 
             // Highlight landing space
             setTimeout(() => {

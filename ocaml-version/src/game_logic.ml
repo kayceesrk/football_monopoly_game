@@ -64,17 +64,18 @@ let apply_roll state die1 die2 =
 (* Apply card effect *)
 let apply_card state card =
   let player = get_current_player state in
+  let state_with_card = { state with last_card = Some card } in
   match card.action with
   | Collect amount ->
       let updated_player = { player with money = player.money + amount } in
-      Continue { state with players = update_player state.players updated_player }
+      Continue { state_with_card with players = update_player state_with_card.players updated_player }
 
   | Pay amount ->
       let updated_player = { player with money = player.money - amount } in
-      Continue { state with players = update_player state.players updated_player }
+      Continue { state_with_card with players = update_player state_with_card.players updated_player }
 
   | CollectFromAll amount ->
-      let other_players = List.filter (fun p -> p.id <> player.id) state.players in
+      let other_players = List.filter (fun p -> p.id <> player.id) state_with_card.players in
       let num_others = List.length other_players in
       let total_collected = amount * num_others in
       let updated_player = { player with money = player.money + total_collected } in
@@ -82,12 +83,12 @@ let apply_card state card =
         List.map (fun p ->
           if p.id = player.id then updated_player
           else { p with money = p.money - amount }
-        ) state.players
+        ) state_with_card.players
       in
-      Continue { state with players = new_players }
+      Continue { state_with_card with players = new_players }
 
   | PayToAll amount ->
-      let other_players = List.filter (fun p -> p.id <> player.id) state.players in
+      let other_players = List.filter (fun p -> p.id <> player.id) state_with_card.players in
       let num_others = List.length other_players in
       let total_paid = amount * num_others in
       let updated_player = { player with money = player.money - total_paid } in
@@ -95,11 +96,11 @@ let apply_card state card =
         List.map (fun p ->
           if p.id = player.id then updated_player
           else { p with money = p.money + amount }
-        ) state.players
+        ) state_with_card.players
       in
-      Continue { state with players = new_players }
+      Continue { state_with_card with players = new_players }
 
-  | Nothing -> Continue state
+  | Nothing -> Continue state_with_card
 
 (* Handle landing on a space *)
 let handle_landing state =

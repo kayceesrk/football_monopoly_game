@@ -52,17 +52,25 @@ let () =
              in
 
              (* Determine event type and details *)
-             let (event_type, can_buy, rent_info, tax_info) = match space.space_type with
+             let (event_type, can_buy, rent_info, tax_info, card_text) = match space.space_type with
                | Game_types.TransferMarket ->
-                   (Js.some (Js.string "transferMarket"), Js._false, Js.null, Js.null)
+                   let card_msg = match new_state.last_card with
+                     | Some card -> Js.some (Js.string card.text)
+                     | None -> Js.null
+                   in
+                   (Js.some (Js.string "transferMarket"), Js._false, Js.null, Js.null, card_msg)
                | Game_types.MatchDay ->
-                   (Js.some (Js.string "matchDay"), Js._false, Js.null, Js.null)
+                   let card_msg = match new_state.last_card with
+                     | Some card -> Js.some (Js.string card.text)
+                     | None -> Js.null
+                   in
+                   (Js.some (Js.string "matchDay"), Js._false, Js.null, Js.null, card_msg)
                | Game_types.Tax t ->
-                   (Js.null, Js._false, Js.null, Js.some (Js.Unsafe.obj [|("amount", Js.Unsafe.inject t.amount)|]))
+                   (Js.null, Js._false, Js.null, Js.some (Js.Unsafe.obj [|("amount", Js.Unsafe.inject t.amount)|]), Js.null)
                | Game_types.Property _ when space.property_state.owner = None ->
-                   (Js.null, Js._true, Js.null, Js.null)
+                   (Js.null, Js._true, Js.null, Js.null, Js.null)
                | Game_types.Property _ when space.property_state.owner = Some curr_player.id ->
-                   (Js.null, Js._false, Js.null, Js.null)
+                   (Js.null, Js._false, Js.null, Js.null, Js.null)
                | Game_types.Property _ ->
                    (match space.property_state.owner with
                     | Some owner_id ->
@@ -72,13 +80,13 @@ let () =
                           ("amount", Js.Unsafe.inject rent);
                           ("ownerName", Js.Unsafe.inject (Js.string owner.Game_types.name))
                         |] in
-                        (Js.null, Js._false, Js.some rent_obj, Js.null)
-                    | None -> (Js.null, Js._false, Js.null, Js.null))
+                        (Js.null, Js._false, Js.some rent_obj, Js.null, Js.null)
+                    | None -> (Js.null, Js._false, Js.null, Js.null, Js.null))
                | Game_types.Broadcasting _ | Game_types.Utility _ when space.property_state.owner = None ->
-                   (Js.null, Js._true, Js.null, Js.null)
+                   (Js.null, Js._true, Js.null, Js.null, Js.null)
                | Game_types.Broadcasting _ | Game_types.Utility _ ->
-                   (Js.null, Js._false, Js.null, Js.null)
-               | _ -> (Js.null, Js._false, Js.null, Js.null)
+                   (Js.null, Js._false, Js.null, Js.null, Js.null)
+               | _ -> (Js.null, Js._false, Js.null, Js.null, Js.null)
              in
 
              object%js
@@ -86,6 +94,7 @@ let () =
                val position = curr_player.position
                val spaceName = Js.string space_name
                val event = event_type
+               val cardText = card_text
                val canBuy = can_buy
                val rentPaid = rent_info
                val taxPaid = tax_info
@@ -97,6 +106,7 @@ let () =
                val position = 0
                val spaceName = Js.string ""
                val event = Js.null
+               val cardText = Js.null
                val canBuy = Js._false
                val rentPaid = Js.null
                val taxPaid = Js.null
@@ -108,6 +118,7 @@ let () =
                val position = 0
                val spaceName = Js.string ""
                val event = Js.null
+               val cardText = Js.null
                val canBuy = Js._false
                val rentPaid = Js.null
                val taxPaid = Js.null

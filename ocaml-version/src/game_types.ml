@@ -76,6 +76,7 @@ type game_state = {
   turn_count: int;
   action_history: game_action list; (* For replay *)
   rng_seed: int option; (* For deterministic simulation *)
+  last_card: card option; (* Last drawn card for UI display *)
 }
 
 type game_result =

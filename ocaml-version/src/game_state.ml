@@ -218,6 +218,7 @@ let create_initial_state () : game_state = {
   turn_count = 0;
   action_history = [];
   rng_seed = None;
+  last_card = None;
 }
 
 let create_player id name : player = {
