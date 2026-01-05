@@ -347,14 +347,14 @@ header h1 {
 
 /* Player tokens */
 .player-token {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     border: 2px solid white;
     position: absolute;
-    top: 25px;
+    top: 3px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    z-index: 5;
+    z-index: 10;
     transition: all 0.4s ease-out;
 }
 
@@ -368,10 +368,10 @@ header h1 {
     50% { transform: scale(1.5) translateY(-10px); }
 }
 
-.player-token-1 { background: #ff5722; left: 5px; }
-.player-token-2 { background: #2196f3; left: 28px; }
-.player-token-3 { background: #4caf50; left: 52px; }
-.player-token-4 { background: #9c27b0; left: 75px; }
+.player-token-1 { background: #ff5722; left: 3px; }
+.player-token-2 { background: #2196f3; left: 25px; }
+.player-token-3 { background: #4caf50; left: 47px; }
+.player-token-4 { background: #9c27b0; left: 69px; }
 
 /* Sidebar */
 .sidebar {
