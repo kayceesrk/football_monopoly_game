@@ -23,19 +23,41 @@ Original prototype - kept for documentation and accessibility:
 
 ## 🚀 Quick Start
 
-### Play the Game (OCaml Version)
+### Play Online
+Visit [kcsrk.info/football_monopoly_game](https://kcsrk.info/football_monopoly_game)
+
+### Deploy Locally (OCaml Version)
+
+#### Prerequisites
+- OCaml 4.14+ and opam
+- Make
+
+#### Setup & Build
 ```bash
 cd ocaml-version
+
 # Install dependencies (one time)
 opam install . --deps-only
 
-# Build
-make js
+# Build the game (compiles OCaml to JavaScript)
+dune build
+cp _build/default/src/main.bc.js web/
 
-# Start local server
+# Or use Make shortcut
+make js
+```
+
+#### Run Local Server
+```bash
+# Option 1: Python (port 8080)
+cd ocaml-version/web
+python3 -m http.server 8080
+
+# Option 2: Make shortcut (port 8080)
+cd ocaml-version
 make serve
 
-# Open browser
+# Open in browser
 open http://localhost:8080
 ```
 
@@ -49,7 +71,8 @@ dune build test/test_simulator.exe
 ### Reference Only: JavaScript Version
 ```bash
 cd js-version
-open index.html  # No compilation needed
+python3 -m http.server 8083
+open http://localhost:8083
 ```
 
 ## 🎯 Game Rules
