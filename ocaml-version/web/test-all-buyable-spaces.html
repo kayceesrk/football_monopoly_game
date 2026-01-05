@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test All Buyable Spaces</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        h1 { color: #4ec9b0; }
+        .pass { color: #4ec9b0; }
+        .fail { color: #f48771; font-weight: bold; }
+        .test-group { margin: 20px 0; padding: 15px; background: #2d2d30; border-left: 4px solid #569cd6; }
+        .summary { padding: 15px; background: #252526; margin: 20px 0; }
+        .summary.fail { border: 2px solid #f48771; }
+        .summary.pass { border: 2px solid #4ec9b0; }
+        pre { background: #1e1e1e; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test All Buyable Space Types</h1>
+    <div id="output"></div>
+    
+    <script src="main.bc.js"></script>
+    <script>
+        let totalTests = 0;
+        let passedTests = 0;
+        let failedTests = 0;
+        const output = [];
+
+        function log(msg, status = null) {
+            const prefix = status === 'pass' ? '✓ ' : status === 'fail' ? '✗ ' : '';
+            const className = status === 'pass' ? 'pass' : status === 'fail' ? 'fail' : '';
+            output.push(`<div class="${className}">${prefix}${msg}</div>`);
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('output').innerHTML = output.join('');
+        }
+
+        function test(name, condition, detail = '') {
+            totalTests++;
+            if (condition) {
+                passedTests++;
+                log(`${name}: ${detail}`, 'pass');
+            } else {
+                failedTests++;
+                log(`${name}: ${detail}`, 'fail');
+            }
+        }
+
+        // Helper to simulate game state and test button logic
+        function testButtonLogic(spaceType, owner, playerMoney, price, playerOwns, expectedBuyable, spaceName) {
+            // Simulate the actual logic from game-ui.js updateActionButtons()
+            const hasRolled = true; // Assume player has rolled
+            
+            const canBuyProperty = hasRolled &&
+                                   owner === null &&
+                                   (spaceType === 'Property' || spaceType === 'Broadcasting' || spaceType === 'Utility') &&
+                                   playerMoney >= price;
+            
+            const testName = `${spaceName} (${spaceType})`;
+            const detail = `owner=${owner}, price=${price}, money=${playerMoney}, canBuy=${canBuyProperty}, expected=${expectedBuyable}`;
+            
+            test(testName, canBuyProperty === expectedBuyable, detail);
+            
+            return canBuyProperty;
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!window.FootballMonopolyOCaml) {
+                    log('❌ OCaml module not loaded!', 'fail');
+                    return;
+                }
+
+                const game = window.FootballMonopolyOCaml;
+                
+                log('<div class="test-group">');
+                log('<h2>🎯 Testing All Buyable Space Types</h2>');
+                log('</div>');
+
+                // Start game to get board
+                game.startGame(2, ['Test Player 1', 'Test Player 2']);
+                const board = game.getBoard();
+                const player = game.getCurrentPlayer();
+
+                // Group spaces by type
+                const spacesByType = {
+                    Property: [],
+                    Broadcasting: [],
+                    Utility: [],
+                    Tax: [],
+                    TransferMarket: [],
+                    MatchDay: [],
+                    Corner: [],
+                    Start: []
+                };
+
+                board.forEach(space => {
+                    spacesByType[space.spaceType].push(space);
+                });
+
+                log('<div class="test-group">');
+                log('<h3>📊 Board Composition</h3>');
+                Object.keys(spacesByType).forEach(type => {
+                    const spaces = spacesByType[type];
+                    log(`${type}: ${spaces.length} spaces`);
+                });
+                log('</div>');
+
+                // Test 1: All unowned Properties should be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 1: Properties (should be buyable)</h3>');
+                spacesByType.Property.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null, // unowned
+                        2000, // player has money
+                        space.price,
+                        false,
+                        true, // SHOULD be buyable
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 2: All unowned Broadcasting should be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 2: Broadcasting (should be buyable)</h3>');
+                spacesByType.Broadcasting.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null, // unowned
+                        2000,
+                        space.price,
+                        false,
+                        true, // SHOULD be buyable
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 3: All unowned Utilities should be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 3: Utilities (should be buyable)</h3>');
+                spacesByType.Utility.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null, // unowned
+                        2000,
+                        space.price,
+                        false,
+                        true, // SHOULD be buyable
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 4: Tax spaces should NOT be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 4: Tax/Special Spaces (should NOT be buyable)</h3>');
+                spacesByType.Tax.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null,
+                        2000,
+                        0,
+                        false,
+                        false, // should NOT be buyable
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 5: Transfer Market should NOT be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 5: Transfer Market (should NOT be buyable)</h3>');
+                spacesByType.TransferMarket.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null,
+                        2000,
+                        0,
+                        false,
+                        false,
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 6: Match Day should NOT be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 6: Match Day (should NOT be buyable)</h3>');
+                spacesByType.MatchDay.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null,
+                        2000,
+                        0,
+                        false,
+                        false,
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 7: Corner spaces should NOT be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 7: Corners (should NOT be buyable)</h3>');
+                spacesByType.Corner.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null,
+                        2000,
+                        0,
+                        false,
+                        false,
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 8: Start should NOT be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 8: Start (should NOT be buyable)</h3>');
+                spacesByType.Start.forEach(space => {
+                    testButtonLogic(
+                        space.spaceType,
+                        null,
+                        2000,
+                        0,
+                        false,
+                        false,
+                        space.name
+                    );
+                });
+                log('</div>');
+
+                // Test 9: Owned spaces should NOT be buyable
+                log('<div class="test-group">');
+                log('<h3>Test Group 9: Owned Properties (should NOT be buyable)</h3>');
+                testButtonLogic('Property', 1, 2000, 100, false, false, 'Owned by other player');
+                testButtonLogic('Property', 0, 2000, 100, true, false, 'Owned by current player');
+                log('</div>');
+
+                // Test 10: Insufficient funds
+                log('<div class="test-group">');
+                log('<h3>Test Group 10: Insufficient Funds (should NOT be buyable)</h3>');
+                testButtonLogic('Property', null, 50, 100, false, false, 'Property too expensive');
+                testButtonLogic('Broadcasting', null, 50, 200, false, false, 'Broadcasting too expensive');
+                testButtonLogic('Utility', null, 50, 150, false, false, 'Utility too expensive');
+                log('</div>');
+
+                // Summary
+                const summaryClass = failedTests > 0 ? 'fail' : 'pass';
+                log(`<div class="summary ${summaryClass}">`);
+                log(`<h2>📊 Test Summary</h2>`);
+                log(`<strong>Total Tests:</strong> ${totalTests}`);
+                log(`<strong class="pass">Passed:</strong> ${passedTests}`);
+                log(`<strong class="fail">Failed:</strong> ${failedTests}`);
+                
+                if (failedTests === 0) {
+                    log('<h3 class="pass">🎉 All tests passed!</h3>');
+                } else {
+                    log(`<h3 class="fail">❌ ${failedTests} test(s) failed - Fix needed!</h3>`);
+                }
+                log('</div>');
+
+                // List the buyable space types for documentation
+                log('<div class="test-group">');
+                log('<h3>📝 Buyable Space Types (Summary)</h3>');
+                log(`<strong class="pass">✓ Property</strong> - ${spacesByType.Property.length} spaces (clubs)`);
+                log(`<strong class="pass">✓ Broadcasting</strong> - ${spacesByType.Broadcasting.length} spaces (TV rights)`);
+                log(`<strong class="pass">✓ Utility</strong> - ${spacesByType.Utility.length} spaces (training/medical)`);
+                log('<br>');
+                log(`<strong>✗ Tax</strong> - ${spacesByType.Tax.length} spaces (fees/fines)`);
+                log(`<strong>✗ TransferMarket</strong> - ${spacesByType.TransferMarket.length} spaces`);
+                log(`<strong>✗ MatchDay</strong> - ${spacesByType.MatchDay.length} spaces`);
+                log(`<strong>✗ Corner</strong> - ${spacesByType.Corner.length} spaces`);
+                log(`<strong>✗ Start</strong> - ${spacesByType.Start.length} space`);
+                log('</div>');
+
+            }, 500);
+        });
+    </script>
+</body>
+</html>

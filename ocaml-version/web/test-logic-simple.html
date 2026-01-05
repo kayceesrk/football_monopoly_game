@@ -13,7 +13,7 @@
 <body>
     <h1>Simple Button State Tests</h1>
     <div id="output"></div>
-    
+
     <script src="main.bc.js"></script>
     <script>
         function log(msg, pass = null) {
@@ -37,9 +37,9 @@
                 log('\n### Test 1: Verify all space types are correct ###');
                 game.startGame(2, ['Player 1', 'Player 2']);
                 const board = game.getBoard();
-                
+
                 log(`Total spaces: ${board.length}`);
-                
+
                 // Check specific spaces
                 const testSpaces = [
                     { pos: 0, expectedName: 'START', expectedType: 'Start' },
@@ -58,44 +58,44 @@
                     const typeMatch = space.spaceType === test.expectedType;
                     const nameMatch = space.name === test.expectedName;
                     const match = typeMatch && nameMatch;
-                    
+
                     if (!match) allCorrect = false;
-                    
+
                     log(`  Pos ${test.pos}: ${space.name} (${space.spaceType}) - Expected: ${test.expectedName} (${test.expectedType})`, match);
                 });
-                
+
                 log(`\nOverall space types: ${allCorrect ? 'PASS' : 'FAIL'}`, allCorrect);
 
                 // Test 2: Buy button logic
                 log('\n### Test 2: Buy button should only enable for unowned Properties ###');
-                
+
                 const propertyCount = board.filter(s => s.spaceType === 'Property').length;
                 const nonPropertyCount = board.filter(s => s.spaceType !== 'Property').length;
-                
+
                 log(`Properties: ${propertyCount}, Non-properties: ${nonPropertyCount}`);
-                
+
                 // Check each space type
                 const cornerSpaces = board.filter(s => s.spaceType === 'Corner');
                 const taxSpaces = board.filter(s => s.spaceType === 'Tax' || s.spaceType === 'Broadcasting' || s.spaceType === 'Utility');
                 const specialSpaces = board.filter(s => s.spaceType === 'TransferMarket' || s.spaceType === 'MatchDay');
                 const startSpaces = board.filter(s => s.spaceType === 'Start');
-                
+
                 log(`  Corners: ${cornerSpaces.map(s => s.name).join(', ')}`);
                 log(`  Tax/Utility/Broadcasting: ${taxSpaces.map(s => s.name).join(', ')}`);
                 log(`  Special (Transfer/Match): ${specialSpaces.map(s => s.name).join(', ')}`);
                 log(`  Start: ${startSpaces.map(s => s.name).join(', ')}`);
-                
+
                 // Test 3: Buyable logic
                 log('\n### Test 3: Check buyable logic for each space type ###');
-                
+
                 const player = game.getCurrentPlayer();
                 board.forEach(space => {
                     const shouldBeBuyable = (
-                        space.spaceType === 'Property' && 
-                        space.owner === null && 
+                        space.spaceType === 'Property' &&
+                        space.owner === null &&
                         player.money >= space.price
                     );
-                    
+
                     if (!shouldBeBuyable && space.spaceType !== 'Property') {
                         // Non-properties should not be buyable - this is correct
                         log(`  ${space.name} (${space.spaceType}): Correctly NOT buyable`, true);
@@ -106,38 +106,38 @@
 
                 // Test 4: Test actual gameplay scenario
                 log('\n### Test 4: Actual gameplay test ###');
-                
+
                 // Reset and play
                 game.startGame(2, ['Alice', 'Bob']);
                 log('Started new game with Alice and Bob');
-                
+
                 // Roll and see what happens
                 const roll1 = game.rollDice(1, 0); // Land on position 1 (Aston Villa)
                 const currentPlayer = game.getCurrentPlayer();
                 const currentSpace = board.find(s => s.position === currentPlayer.position);
-                
+
                 log(`Alice rolled 1+0, landed on: ${roll1.spaceName} (pos ${currentPlayer.position})`);
                 log(`  Space type: ${currentSpace.spaceType}`);
                 log(`  Can buy: ${roll1.canBuy ? 'YES' : 'NO'}`, currentSpace.spaceType === 'Property' ? roll1.canBuy : !roll1.canBuy);
-                
+
                 // Buy it
                 if (roll1.canBuy) {
                     const buyResult = game.buyProperty();
                     log(`  Bought property: ${buyResult.success ? 'SUCCESS' : 'FAIL'}`, buyResult.success);
                 }
-                
+
                 game.endTurn();
-                
+
                 // Bob's turn - move to a non-property
                 const roll2 = game.rollDice(1, 0); // Land on position 2 (ESPN - Broadcasting)
                 const bobSpace = board.find(s => s.position === game.getCurrentPlayer().position);
-                
+
                 log(`Bob rolled 1+0, landed on: ${roll2.spaceName} (pos ${game.getCurrentPlayer().position})`);
                 log(`  Space type: ${bobSpace.spaceType}`);
                 log(`  Can buy: ${roll2.canBuy ? 'YES' : 'NO'}`, !roll2.canBuy);
 
                 log('\n=== Tests Complete ===');
-                
+
             }, 500);
         });
     </script>

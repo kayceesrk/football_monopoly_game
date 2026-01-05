@@ -317,10 +317,11 @@ class GameUI {
             return;
         }
 
-        // Enable buy property if on unowned property
+        // Enable buy property if on unowned property/utility/broadcasting
+        const buyableTypes = ['Property', 'Broadcasting', 'Utility'];
         const canBuyProperty = currentSpace &&
                                currentSpace.owner === null &&
-                               currentSpace.spaceType === 'Property' &&
+                               buyableTypes.includes(currentSpace.spaceType) &&
                                player.money >= currentSpace.price;
 
         document.getElementById('buyPropertyBtn').disabled = !canBuyProperty;
