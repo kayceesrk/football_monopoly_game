@@ -32,6 +32,31 @@ let owns_property_in_color state player_id color =
     | _ -> false
   ) state.board
 
+(* Helper: Check for bankruptcy and declare winner if only one player remains *)
+let check_bankruptcy state =
+  let current_player = get_current_player state in
+  
+  if current_player.money <= 0 then
+    let bankrupt_player = { current_player with bankrupt = true } in
+    (* Release all properties owned by bankrupt player *)
+    let new_board =
+      Array.map (fun space ->
+        if space.property_state.owner = Some current_player.id then
+          { space with property_state = empty_property_state }
+        else space
+      ) state.board
+    in
+    let new_players = update_player state.players bankrupt_player in
+    let active_players = List.filter (fun p -> not p.bankrupt) new_players in
+    
+    (* Check for winner *)
+    if List.length active_players = 1 then
+      Winner (List.hd active_players)
+    else
+      Continue { state with players = new_players; board = new_board }
+  else
+    Continue state
+
 (* Calculate rent for a property *)
 let calculate_rent state space owner_id payer_id =
   match space.space_type with
@@ -89,7 +114,8 @@ let apply_card state card =
 
   | Pay amount ->
       let updated_player = { player with money = player.money - amount } in
-      Continue { state_with_card with players = update_player state_with_card.players updated_player }
+      let new_state = { state_with_card with players = update_player state_with_card.players updated_player } in
+      check_bankruptcy new_state
 
   | CollectFromAll amount ->
       let other_players = List.filter (fun p -> p.id <> player.id) state_with_card.players in
@@ -102,7 +128,8 @@ let apply_card state card =
           else { p with money = p.money - amount }
         ) state_with_card.players
       in
-      Continue { state_with_card with players = new_players }
+      let new_state = { state_with_card with players = new_players } in
+      check_bankruptcy new_state
 
   | PayToAll amount ->
       let other_players = List.filter (fun p -> p.id <> player.id) state_with_card.players in
@@ -115,7 +142,8 @@ let apply_card state card =
           else { p with money = p.money + amount }
         ) state_with_card.players
       in
-      Continue { state_with_card with players = new_players }
+      let new_state = { state_with_card with players = new_players } in
+      check_bankruptcy new_state
 
   | Nothing -> Continue state_with_card
 
@@ -127,7 +155,8 @@ let handle_landing state =
   match space.space_type with
   | Tax t ->
       let updated_player = { player with money = player.money - t.amount } in
-      Continue { state with players = update_player state.players updated_player }
+      let new_state = { state with players = update_player state.players updated_player } in
+      check_bankruptcy new_state
 
   | Property _ when space.property_state.owner = Some player.id ->
       Continue state (* Own property, nothing happens *)
@@ -147,7 +176,8 @@ let handle_landing state =
              update_player state.players updated_player
              |> (fun ps -> update_player ps updated_owner)
            in
-           Continue { state with players = new_players }
+           let new_state = { state with players = new_players } in
+           check_bankruptcy new_state
        | None -> Continue state)
 
   | Broadcasting _ when space.property_state.owner = Some player.id ->
@@ -173,7 +203,8 @@ let handle_landing state =
              update_player state.players updated_player
              |> (fun ps -> update_player ps updated_owner)
            in
-           Continue { state with players = new_players }
+           let new_state = { state with players = new_players } in
+           check_bankruptcy new_state
        | None -> Continue state)
 
   | Utility _ when space.property_state.owner = Some player.id ->
@@ -206,7 +237,8 @@ let handle_landing state =
              update_player state.players updated_player
              |> (fun ps -> update_player ps updated_owner)
            in
-           Continue { state with players = new_players }
+           let new_state = { state with players = new_players } in
+           check_bankruptcy new_state
        | None -> Continue state)
 
   | TransferMarket ->
@@ -362,8 +394,8 @@ let buy_star state =
 let end_turn state =
   let player = get_current_player state in
 
-  (* Check bankruptcy *)
-  if player.money < 0 then
+  (* Final bankruptcy check (in case player went negative but wasn't checked yet) *)
+  if player.money <= 0 then
     let bankrupt_player = { player with bankrupt = true } in
     (* Release all properties *)
     let new_board =
@@ -390,7 +422,7 @@ let end_turn state =
         action_history = EndTurn :: state.action_history;
       }
   else
-    (* Normal turn end *)
+    (* Normal turn end - move to next player *)
     let next_idx = (state.current_player_idx + 1) mod List.length state.players in
     Continue {
       state with
