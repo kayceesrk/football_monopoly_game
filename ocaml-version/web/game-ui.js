@@ -113,6 +113,11 @@ class GameUI {
                 message += ` - Paid ${result.taxPaid.amount} FC tax`;
             }
 
+            // Show club fact if available
+            if (result.spaceFact) {
+                message += `\n\n💡 ${result.spaceFact}`;
+            }
+
             this.showMessage(message, 'info');
 
             // Highlight landing space

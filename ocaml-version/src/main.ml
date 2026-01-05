@@ -39,16 +39,16 @@ let () =
              let curr_player = Game_logic.get_current_player new_state in
              let space = new_state.board.(curr_player.position) in
 
-             (* Determine space name *)
-             let space_name = match space.space_type with
-               | Game_types.Start -> "START"
-               | Game_types.Property p -> p.name
-               | Game_types.Broadcasting b -> b.name
-               | Game_types.Utility u -> u.name
-               | Game_types.Tax t -> t.name
-               | Game_types.TransferMarket -> "Transfer Market"
-               | Game_types.MatchDay -> "Match Day"
-               | Game_types.Corner s -> s
+             (* Determine space name and fact *)
+             let (space_name, space_fact) = match space.space_type with
+               | Game_types.Start -> ("START", None)
+               | Game_types.Property p -> (p.name, Some p.fact)
+               | Game_types.Broadcasting b -> (b.name, None)
+               | Game_types.Utility u -> (u.name, None)
+               | Game_types.Tax t -> (t.name, None)
+               | Game_types.TransferMarket -> ("Transfer Market", None)
+               | Game_types.MatchDay -> ("Match Day", None)
+               | Game_types.Corner s -> (s, None)
              in
 
              (* Determine event type and details *)
@@ -93,6 +93,9 @@ let () =
                val success = Js._true
                val position = curr_player.position
                val spaceName = Js.string space_name
+               val spaceFact = (match space_fact with
+                 | Some fact -> Js.some (Js.string fact)
+                 | None -> Js.null)
                val event = event_type
                val cardText = card_text
                val canBuy = can_buy
@@ -105,6 +108,7 @@ let () =
                val success = Js._false
                val position = 0
                val spaceName = Js.string ""
+               val spaceFact = Js.null
                val event = Js.null
                val cardText = Js.null
                val canBuy = Js._false
@@ -117,6 +121,7 @@ let () =
                val success = Js._true
                val position = 0
                val spaceName = Js.string ""
+               val spaceFact = Js.null
                val event = Js.null
                val cardText = Js.null
                val canBuy = Js._false

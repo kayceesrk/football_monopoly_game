@@ -17,6 +17,7 @@ type space_type =
       price: money;
       rent: money array; (* [base; 1youth; 2youth; 3youth; 4youth; star] *)
       color: color;
+      fact: string; (* Interesting fact about the club *)
     }
   | Broadcasting of { name: string; price: money }
   | Utility of { name: string; price: money }
