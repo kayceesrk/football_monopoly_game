@@ -3,13 +3,13 @@
 
 function testButtonLogic(spaceType, owner, playerMoney, price, expectedBuyable, spaceName) {
     const hasRolled = true;
-    
+
     // This is the EXACT logic from game-ui.js updateActionButtons()
     const canBuyProperty = hasRolled &&
                            owner === null &&
                            (spaceType === 'Property' || spaceType === 'Broadcasting' || spaceType === 'Utility') &&
                            playerMoney >= price;
-    
+
     const pass = canBuyProperty === expectedBuyable;
     const status = pass ? '✓' : '✗';
     console.log(`${status} ${spaceName} (${spaceType}): canBuy=${canBuyProperty}, expected=${expectedBuyable}`);

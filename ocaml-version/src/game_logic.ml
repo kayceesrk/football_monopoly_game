@@ -35,7 +35,7 @@ let owns_property_in_color state player_id color =
 (* Helper: Check for bankruptcy and declare winner if only one player remains *)
 let check_bankruptcy state =
   let current_player = get_current_player state in
-  
+
   if current_player.money <= 0 then
     let bankrupt_player = { current_player with bankrupt = true } in
     (* Release all properties owned by bankrupt player *)
@@ -48,7 +48,7 @@ let check_bankruptcy state =
     in
     let new_players = update_player state.players bankrupt_player in
     let active_players = List.filter (fun p -> not p.bankrupt) new_players in
-    
+
     (* Check for winner *)
     if List.length active_players = 1 then
       Winner (List.hd active_players)

@@ -18,7 +18,7 @@
 <body>
     <h1>🧪 Test All Buyable Space Types</h1>
     <div id="output"></div>
-    
+
     <script src="main.bc.js"></script>
     <script>
         let totalTests = 0;
@@ -52,17 +52,17 @@
         function testButtonLogic(spaceType, owner, playerMoney, price, playerOwns, expectedBuyable, spaceName) {
             // Simulate the actual logic from game-ui.js updateActionButtons()
             const hasRolled = true; // Assume player has rolled
-            
+
             const canBuyProperty = hasRolled &&
                                    owner === null &&
                                    (spaceType === 'Property' || spaceType === 'Broadcasting' || spaceType === 'Utility') &&
                                    playerMoney >= price;
-            
+
             const testName = `${spaceName} (${spaceType})`;
             const detail = `owner=${owner}, price=${price}, money=${playerMoney}, canBuy=${canBuyProperty}, expected=${expectedBuyable}`;
-            
+
             test(testName, canBuyProperty === expectedBuyable, detail);
-            
+
             return canBuyProperty;
         }
 
@@ -74,7 +74,7 @@
                 }
 
                 const game = window.FootballMonopolyOCaml;
-                
+
                 log('<div class="test-group">');
                 log('<h2>🎯 Testing All Buyable Space Types</h2>');
                 log('</div>');
@@ -258,7 +258,7 @@
                 log(`<strong>Total Tests:</strong> ${totalTests}`);
                 log(`<strong class="pass">Passed:</strong> ${passedTests}`);
                 log(`<strong class="fail">Failed:</strong> ${failedTests}`);
-                
+
                 if (failedTests === 0) {
                     log('<h3 class="pass">🎉 All tests passed!</h3>');
                 } else {

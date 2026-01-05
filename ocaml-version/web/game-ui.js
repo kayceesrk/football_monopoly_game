@@ -361,7 +361,7 @@ class GameUI {
         let html = `<h4>${space.name}</h4>`;
 
         if (space.owner !== null) {
-            const owner = this.game.getPlayers()[space.owner];
+            const owner = this.game.getPlayers().find(p => p.id === space.owner);
             html += `<p><strong>Owner:</strong> ${owner.name}</p>`;
             html += `<p><strong>Youth Players:</strong> ${'⚽'.repeat(space.youthPlayers)}</p>`;
             if (space.hasStar) html += `<p><strong>Star Player:</strong> ⭐</p>`;
